@@ -18,3 +18,6 @@ HEADERS  += mainwindow.h
 FORMS    += mainwindow.ui
 
 LIBS    += -lsundown
+
+OTHER_FILES += \
+    README.md
