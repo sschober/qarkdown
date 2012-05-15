@@ -16,8 +16,11 @@ public:
     ~MainWindow();
 public slots:
     void textChanged();
+    void fileOpen();
+    void fileSave();
 private:
     Ui::MainWindow *ui;
+    QString fileName;
 };
 
 #endif // MAINWINDOW_H
