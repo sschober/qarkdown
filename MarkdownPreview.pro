@@ -21,3 +21,6 @@ LIBS    += -lsundown
 
 OTHER_FILES += \
     README.md
+
+RESOURCES += \
+    ressources.qrc

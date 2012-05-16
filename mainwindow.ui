@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QHBoxLayout" name="horizontalLayout" stretch="50,50">
+   <layout class="QHBoxLayout" name="horizontalLayout" stretch="50,50,0">
     <item>
      <widget class="QPlainTextEdit" name="plainTextEdit"/>
     </item>
@@ -27,6 +27,9 @@
       </property>
      </widget>
     </item>
+    <item>
+     <widget class="QPlainTextEdit" name="sourceView"/>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menuBar">
@@ -35,7 +38,7 @@
      <x>0</x>
      <y>0</y>
      <width>838</width>
-     <height>22</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

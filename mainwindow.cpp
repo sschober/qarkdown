@@ -40,15 +40,14 @@ void MainWindow::fileSave(){
     out << ui->plainTextEdit->toPlainText();
 }
 
-void MainWindow::textChanged(){
-    QString text = ui->plainTextEdit->toPlainText();
+static QString markdown(QString in){
     struct buf *ib, *ob;
     struct sd_callbacks cbs;
     struct html_renderopt opts;
     struct sd_markdown *mkd;
 
-    if(text.size() > 0){
-        char *txt = (char*) text.toStdString().c_str();
+    if(in.size() > 0){
+        char *txt = (char*) in.toStdString().c_str();
         ib = bufnew(strlen(txt));
         bufputs(ib,txt);
         ob = bufnew(64);
@@ -56,6 +55,20 @@ void MainWindow::textChanged(){
         mkd = sd_markdown_new(0,16,&cbs,&opts);
         sd_markdown_render(ob,ib->data,ib->size,mkd);
         sd_markdown_free(mkd);
-        ui->webView->setHtml(QString(bufcstr(ob)));
+        return QString(bufcstr(ob));
     }
+    return "";
 }
+
+static QString wrapInHTMLDoc(QString in){
+    return in
+            .prepend("<html>\n <head>\n  <link type=\"text/css\" rel=\"stylesheet\" href=\"qrc:///css/bootstrap.css\"/>\n </head>\n <body>\n")
+            .append("\n </body>\n</html>");
+}
+
+void MainWindow::textChanged(){
+    QString newText = wrapInHTMLDoc(markdown(ui->plainTextEdit->toPlainText()));
+    ui->webView->setHtml(newText);
+    ui->sourceView->setPlainText(newText);
+}
+

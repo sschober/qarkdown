@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/css">
+        <file alias="bootstrap.css">bootstrap.css</file>
+    </qresource>
+</RCC>
