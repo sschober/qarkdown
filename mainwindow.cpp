@@ -7,12 +7,25 @@
 
 #include <QFileDialog>
 #include <QTextStream>
+#include <QTime>
+#include <QDebug>
+#include <QWebFrame>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    QFont font;
+    font.setFamily("Courier");
+    font.setFixedPitch(true);
+    font.setPointSize(10);
+    ui->plainTextEdit->setFont(font);
+
+    ui->actionOpen->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_O));
+    ui->actionSave->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_S));
+
     connect(ui->plainTextEdit, SIGNAL(textChanged()),this, SLOT(textChanged()));
     connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(fileOpen()));
     connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(fileSave()));
@@ -24,11 +37,18 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::fileOpen(){
-    fileName = QFileDialog::getOpenFileName(this,tr("Open File"),"","*.md");
+    fileName = QFileDialog::getOpenFileName(this,tr("Open File"),"","*.md *.mkd");
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         return;
-    QString fileContent(file.readAll());
+    QString fileContent;
+    QTextStream in(&file);
+    QString line;
+    while(! in.atEnd()){
+        line = in.readLine();
+        if(! line.isNull() )
+            fileContent.append(line).append('\n');
+    }
     ui->plainTextEdit->setPlainText(fileContent);
 }
 
@@ -47,15 +67,21 @@ static QString markdown(QString in){
     struct sd_markdown *mkd;
 
     if(in.size() > 0){
-        char *txt = (char*) in.toStdString().c_str();
-        ib = bufnew(strlen(txt));
-        bufputs(ib,txt);
-        ob = bufnew(64);
-        sdhtml_renderer(&cbs,&opts,0);
-        mkd = sd_markdown_new(0,16,&cbs,&opts);
-        sd_markdown_render(ob,ib->data,ib->size,mkd);
-        sd_markdown_free(mkd);
-        return QString(bufcstr(ob));
+        std::string ss = in.toStdString();
+        const char *txt = ss.c_str();
+        if(NULL == txt) qDebug() << "txt was null!";
+        if(0 < qstrlen(txt)){
+            ib = bufnew(qstrlen(txt));
+            bufputs(ib,txt);
+            ob = bufnew(64);
+            sdhtml_renderer(&cbs,&opts,0);
+            mkd = sd_markdown_new(0,16,&cbs,&opts);
+            sd_markdown_render(ob,ib->data,ib->size,mkd);
+            sd_markdown_free(mkd);
+            return QString(bufcstr(ob));
+        }
+        else
+            qDebug() <<"qstrlen was null";
     }
     return "";
 }
@@ -67,8 +93,13 @@ static QString wrapInHTMLDoc(QString in){
 }
 
 void MainWindow::textChanged(){
+    QTime t;
+    t.start();
     QString newText = wrapInHTMLDoc(markdown(ui->plainTextEdit->toPlainText()));
+    ui->statusBar->showMessage(QString("Render time: %1 ms").arg(t.elapsed()));
+    QPoint pos = ui->webView->page()->currentFrame()->scrollPosition();
     ui->webView->setHtml(newText);
+    ui->webView->page()->currentFrame()->setScrollPosition(pos);
     ui->sourceView->setPlainText(newText);
 }
 
