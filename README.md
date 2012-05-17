@@ -11,6 +11,7 @@ Edit text in an editor on the left side of the app and see a preview of the rend
 - `CTRL-U` displays a source view.
 - `CTRL-O` opens a file
 - `CTRL-S` saves the file
+- `CTRL-D` opens a directory view on the left
 
 ## Dependencies
 
