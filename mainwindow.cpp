@@ -10,6 +10,7 @@
 #include <QTime>
 #include <QDebug>
 #include <QWebFrame>
+#include <QFileSystemModel>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -26,15 +27,19 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->actionOpen->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_O));
     ui->actionSave->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_S));
     ui->actionSource->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_U));
+    ui->actionDirectory->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_D));
 
     connect(ui->plainTextEdit, SIGNAL(textChanged()),this, SLOT(textChanged()));
     connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(fileOpen()));
     connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(fileSave()));
     connect(ui->actionSave_As, SIGNAL(triggered()), this, SLOT(fileSaveAs()));
     connect(ui->actionSource, SIGNAL(triggered()),this,SLOT(viewSource()));
+    connect(ui->actionDirectory, SIGNAL(triggered()),this,SLOT(viewDirectory()));
 
     ui->actionSave->setEnabled(false);
     ui->sourceView->hide();
+
+    ui->listView->hide();
 }
 
 void MainWindow::viewSource(){
@@ -43,6 +48,20 @@ void MainWindow::viewSource(){
     }
     else{
         ui->sourceView->show();
+    }
+}
+
+void MainWindow::viewDirectory(){
+    if(!ui->listView->isVisible()){
+        QFileSystemModel *model = new QFileSystemModel;
+        // if file is opened open parent dir
+        // else open cwd
+        model->setRootPath(QDir::currentPath());
+        ui->listView->setModel(model);
+        ui->listView->show();
+    }
+    else{
+        ui->listView->hide();
     }
 }
 
@@ -67,6 +86,10 @@ void MainWindow::fileOpen(){
     ui->plainTextEdit->setPlainText(fileContent);
     ui->actionSave->setEnabled(true);
     setWindowTitle(fileName);
+
+    // tend list view
+    // show parent dir
+    // and select current file
 }
 
 void MainWindow::fileSave(){

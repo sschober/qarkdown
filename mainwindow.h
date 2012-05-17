@@ -21,6 +21,7 @@ public slots:
     void fileSave();
     void fileSaveAs();
     void viewSource();
+    void viewDirectory();
 
 private:
     Ui::MainWindow *ui;
