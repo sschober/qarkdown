@@ -29,6 +29,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->plainTextEdit, SIGNAL(textChanged()),this, SLOT(textChanged()));
     connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(fileOpen()));
     connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(fileSave()));
+    connect(ui->actionSave_As, SIGNAL(triggered()), this, SLOT(fileSaveAs()));
+
+    ui->actionSave->setEnabled(false);
 }
 
 MainWindow::~MainWindow()
@@ -50,6 +53,7 @@ void MainWindow::fileOpen(){
             fileContent.append(line).append('\n');
     }
     ui->plainTextEdit->setPlainText(fileContent);
+    ui->actionSave->setEnabled(true);
 }
 
 void MainWindow::fileSave(){
@@ -58,6 +62,13 @@ void MainWindow::fileSave(){
         return;
     QTextStream out(&file);
     out << ui->plainTextEdit->toPlainText();
+}
+
+void MainWindow::fileSaveAs(){
+    fileName = QFileDialog::getSaveFileName(this,tr("Save File As"));
+    // this should be coupled to a dirty flag actually...
+    ui->actionSave->setEnabled(true);
+    fileSave();
 }
 
 static QString markdown(QString in){

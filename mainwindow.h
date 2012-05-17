@@ -14,10 +14,13 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
 public slots:
     void textChanged();
     void fileOpen();
     void fileSave();
+    void fileSaveAs();
+
 private:
     Ui::MainWindow *ui;
     QString fileName;
