@@ -53,11 +53,6 @@ void MainWindow::viewSource(){
 
 void MainWindow::viewDirectory(){
     if(!ui->listView->isVisible()){
-        QFileSystemModel *model = new QFileSystemModel;
-        // if file is opened open parent dir
-        // else open cwd
-        model->setRootPath(QDir::currentPath());
-        ui->listView->setModel(model);
         ui->listView->show();
     }
     else{
@@ -89,6 +84,9 @@ void MainWindow::fileOpen(){
         ui->actionSave->setEnabled(true);
         setWindowTitle(fileName);
 
+        QFileSystemModel *model = new QFileSystemModel;
+        model->setRootPath(QFileInfo(currentFile->fileName()).dir().path());
+        ui->listView->setModel(model);
         // tend list view
         // show parent dir
         // and select current file
