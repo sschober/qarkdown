@@ -1,6 +1,6 @@
 # qarkdown
 
-A Qt [markdown](http://daringfireball.net/projects/markdown/) preview app.
+A [Qt](http://qt.nokia.com/products/) [markdown](http://daringfireball.net/projects/markdown/) preview app.
 
 ## Features
 
@@ -28,6 +28,7 @@ should do it.
 
 ## Feature Ideas
 
+- Customizable UI - Configurable editor position and size, e.g. fixed column size
 - Versioning - maybe based on `git`
 - Simple file switching - maybe enabled by a little file browser on the left side of the app
 - Some kind of journal support - Ability to add a new entry/file/whatever tagged by the current date and time just by hitting a single key combo (`CTRL-N`)
