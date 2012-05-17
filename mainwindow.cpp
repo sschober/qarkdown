@@ -25,13 +25,25 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->actionOpen->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_O));
     ui->actionSave->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_S));
+    ui->actionSource->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_U));
 
     connect(ui->plainTextEdit, SIGNAL(textChanged()),this, SLOT(textChanged()));
     connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(fileOpen()));
     connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(fileSave()));
     connect(ui->actionSave_As, SIGNAL(triggered()), this, SLOT(fileSaveAs()));
+    connect(ui->actionSource, SIGNAL(triggered()),this,SLOT(viewSource()));
 
     ui->actionSave->setEnabled(false);
+    ui->sourceView->hide();
+}
+
+void MainWindow::viewSource(){
+    if(ui->sourceView->isVisible()){
+        ui->sourceView->hide();
+    }
+    else{
+        ui->sourceView->show();
+    }
 }
 
 MainWindow::~MainWindow()

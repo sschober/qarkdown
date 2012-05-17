@@ -20,6 +20,7 @@ public slots:
     void fileOpen();
     void fileSave();
     void fileSaveAs();
+    void viewSource();
 
 private:
     Ui::MainWindow *ui;
