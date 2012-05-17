@@ -4,7 +4,7 @@ A Qt [markdown](http://daringfireball.net/projects/markdown/) preview app.
 
 ## Features
 
-Edit text in an editor on the left side of the app and see a preview of the rendered markdown/html output on the right. The app is kept decidedly simple. You can load and save files.
+Edit text in an editor on the left side of the app and see a preview of the rendered markdown/html output on the right. The app is kept decidedly simple. You can load and save files. The window title displays the currently opened file.
 
 ### Keyboard shortcuts
 

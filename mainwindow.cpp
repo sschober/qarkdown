@@ -66,6 +66,7 @@ void MainWindow::fileOpen(){
     }
     ui->plainTextEdit->setPlainText(fileContent);
     ui->actionSave->setEnabled(true);
+    setWindowTitle(fileName);
 }
 
 void MainWindow::fileSave(){
@@ -80,6 +81,7 @@ void MainWindow::fileSaveAs(){
     fileName = QFileDialog::getSaveFileName(this,tr("Save File As"));
     // this should be coupled to a dirty flag actually...
     ui->actionSave->setEnabled(true);
+    setWindowTitle(fileName);
     fileSave();
 }
 
