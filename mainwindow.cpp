@@ -71,41 +71,47 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::fileOpen(){
-    fileName = QFileDialog::getOpenFileName(this,tr("Open File"),"","*.md *.mkd");
-    QFile file(fileName);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        return;
-    QString fileContent;
-    QTextStream in(&file);
-    QString line;
-    while(! in.atEnd()){
-        line = in.readLine();
-        if(! line.isNull() )
-            fileContent.append(line).append('\n');
-    }
-    ui->plainTextEdit->setPlainText(fileContent);
-    ui->actionSave->setEnabled(true);
-    setWindowTitle(fileName);
+    QString fileName = QFileDialog::getOpenFileName(this,tr("Open File"),"","*.md *.mkd");
+    if(NULL != fileName){
+        currentFile = new QFile(fileName);
+        if (!currentFile->open(QIODevice::ReadOnly | QIODevice::Text))
+            return;
+        QString fileContent;
+        QTextStream in(currentFile);
+        QString line;
+        while(! in.atEnd()){
+            line = in.readLine();
+            if(! line.isNull() )
+                fileContent.append(line).append('\n');
+        }
+        currentFile->close();
+        ui->plainTextEdit->setPlainText(fileContent);
+        ui->actionSave->setEnabled(true);
+        setWindowTitle(fileName);
 
-    // tend list view
-    // show parent dir
-    // and select current file
+        // tend list view
+        // show parent dir
+        // and select current file
+    }
 }
 
 void MainWindow::fileSave(){
-    QFile file(fileName);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+    if (!currentFile->open(QIODevice::WriteOnly | QIODevice::Text))
         return;
-    QTextStream out(&file);
+    QTextStream out(currentFile);
     out << ui->plainTextEdit->toPlainText();
+    currentFile->close();
 }
 
 void MainWindow::fileSaveAs(){
-    fileName = QFileDialog::getSaveFileName(this,tr("Save File As"));
-    // this should be coupled to a dirty flag actually...
-    ui->actionSave->setEnabled(true);
-    setWindowTitle(fileName);
-    fileSave();
+    QString fileName = QFileDialog::getSaveFileName(this,tr("Save File As"));
+    if(NULL != fileName ){
+        currentFile = new QFile(fileName);
+        // this should be coupled to a dirty flag actually...
+        ui->actionSave->setEnabled(true);
+        setWindowTitle(fileName);
+        fileSave();
+    }
 }
 
 static QString markdown(QString in){
