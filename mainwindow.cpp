@@ -24,24 +24,33 @@ MainWindow::MainWindow(QWidget *parent) :
     font.setPointSize(10);
     ui->plainTextEdit->setFont(font);
 
+    ui->actionNew->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_N));
     ui->actionOpen->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_O));
     ui->actionSave->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_S));
     ui->actionSource->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_U));
     ui->actionDirectory->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_D));
 
     connect(ui->plainTextEdit, SIGNAL(textChanged()),this, SLOT(textChanged()));
+    connect(ui->actionNew, SIGNAL(triggered()), this, SLOT(fileNew()));
     connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(fileOpen()));
     connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(fileSave()));
     connect(ui->actionSave_As, SIGNAL(triggered()), this, SLOT(fileSaveAs()));
     connect(ui->actionSource, SIGNAL(triggered()),this,SLOT(viewSource()));
     connect(ui->actionDirectory, SIGNAL(triggered()),this,SLOT(viewDirectory()));
-
     connect(ui->listView, SIGNAL(clicked(QModelIndex)), this, SLOT(dirViewClicked(QModelIndex)));
 
     ui->actionSave->setEnabled(false);
     ui->sourceView->hide();
 
     ui->listView->hide();
+}
+
+void MainWindow::fileNew(){
+    if(NULL != currentFile){
+        fileSave();
+    }
+    currentFile = NULL;
+    ui->plainTextEdit->setPlainText("");
 }
 
 void MainWindow::dirViewClicked(QModelIndex idx){
@@ -94,19 +103,22 @@ void MainWindow::openFile(QString fileName){
         ui->plainTextEdit->setPlainText(fileContent);
         ui->actionSave->setEnabled(true);
         setWindowTitle(fileName);
-
-        QFileSystemModel *model = new QFileSystemModel;
-        QString path(QFileInfo(currentFile->fileName()).dir().path());
-        model->setFilter(QDir::AllDirs | QDir::AllEntries);
-        QStringList flt;
-        flt << "*.md" << "*.mkd";
-        model->setNameFilters(flt);
-        model->setNameFilterDisables(false);
-        model->setRootPath(path);
-        ui->listView->setModel(model);
-        ui->listView->setRootIndex(model->index(path));
+        updateListView();
     }
 
+}
+
+void MainWindow::updateListView(){
+    QFileSystemModel *model = new QFileSystemModel;
+    QString path(QFileInfo(currentFile->fileName()).dir().path());
+    model->setFilter(QDir::AllDirs | QDir::AllEntries);
+    QStringList flt;
+    flt << "*.md" << "*.mkd";
+    model->setNameFilters(flt);
+    model->setNameFilterDisables(false);
+    model->setRootPath(path);
+    ui->listView->setModel(model);
+    ui->listView->setRootIndex(model->index(path));
 }
 
 void MainWindow::fileOpen(){
@@ -114,11 +126,17 @@ void MainWindow::fileOpen(){
 }
 
 void MainWindow::fileSave(){
+    if(NULL == currentFile){
+        QString newFileName = QFileDialog::getSaveFileName();
+        currentFile = new QFile(newFileName);
+        setWindowTitle(newFileName);
+    }
     if (!currentFile->open(QIODevice::WriteOnly | QIODevice::Text))
         return;
     QTextStream out(currentFile);
     out << ui->plainTextEdit->toPlainText();
     currentFile->close();
+    updateListView();
 }
 
 void MainWindow::fileSaveAs(){

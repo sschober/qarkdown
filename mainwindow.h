@@ -19,6 +19,7 @@ public:
 
 public slots:
     void textChanged();
+    void fileNew();
     void fileOpen();
     void fileSave();
     void fileSaveAs();
@@ -29,6 +30,7 @@ public slots:
 
 private:
     void openFile(QString fileName);
+    void updateListView();
 
     Ui::MainWindow *ui;
     QFile *currentFile;
