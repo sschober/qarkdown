@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QFile>
+#include <QModelIndex>
 
 namespace Ui {
 class MainWindow;
@@ -23,8 +24,12 @@ public slots:
     void fileSaveAs();
     void viewSource();
     void viewDirectory();
+    void dirViewClicked(QModelIndex idx);
+
 
 private:
+    void openFile(QString fileName);
+
     Ui::MainWindow *ui;
     QFile *currentFile;
 };

@@ -36,10 +36,22 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionSource, SIGNAL(triggered()),this,SLOT(viewSource()));
     connect(ui->actionDirectory, SIGNAL(triggered()),this,SLOT(viewDirectory()));
 
+    connect(ui->listView, SIGNAL(clicked(QModelIndex)), this, SLOT(dirViewClicked(QModelIndex)));
+
     ui->actionSave->setEnabled(false);
     ui->sourceView->hide();
 
     ui->listView->hide();
+}
+
+void MainWindow::dirViewClicked(QModelIndex idx){
+    if(NULL != currentFile){
+        fileSave();
+    }
+    QFileSystemModel *model = (QFileSystemModel*) ui->listView->model();
+
+    openFile(model->filePath(idx));
+
 }
 
 void MainWindow::viewSource(){
@@ -65,8 +77,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::fileOpen(){
-    QString fileName = QFileDialog::getOpenFileName(this,tr("Open File"),"","*.md *.mkd");
+void MainWindow::openFile(QString fileName){
     if(NULL != fileName){
         currentFile = new QFile(fileName);
         if (!currentFile->open(QIODevice::ReadOnly | QIODevice::Text))
@@ -85,12 +96,21 @@ void MainWindow::fileOpen(){
         setWindowTitle(fileName);
 
         QFileSystemModel *model = new QFileSystemModel;
-        model->setRootPath(QFileInfo(currentFile->fileName()).dir().path());
+        QString path(QFileInfo(currentFile->fileName()).dir().path());
+        model->setFilter(QDir::AllDirs | QDir::AllEntries);
+        QStringList flt;
+        flt << "*.md" << "*.mkd";
+        model->setNameFilters(flt);
+        model->setNameFilterDisables(false);
+        model->setRootPath(path);
         ui->listView->setModel(model);
-        // tend list view
-        // show parent dir
-        // and select current file
+        ui->listView->setRootIndex(model->index(path));
     }
+
+}
+
+void MainWindow::fileOpen(){
+    openFile(QFileDialog::getOpenFileName(this,tr("Open File"),"","*.md *.mkd"));
 }
 
 void MainWindow::fileSave(){
