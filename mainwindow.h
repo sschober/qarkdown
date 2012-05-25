@@ -5,6 +5,8 @@
 #include <QFile>
 #include <QModelIndex>
 
+#include "hscrollwebview.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -34,6 +36,8 @@ private:
 
     Ui::MainWindow *ui;
     QFile *currentFile;
+
+    HScrollWebView *hswv;
 };
 
 #endif // MAINWINDOW_H

@@ -11,9 +11,11 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    hscrollwebview.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    hscrollwebview.h
 
 FORMS    += mainwindow.ui
 

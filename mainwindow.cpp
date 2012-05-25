@@ -18,6 +18,9 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    hswv = new HScrollWebView(this);
+    ui->splitter->addWidget(hswv);
+
     QFont font;
     font.setFamily("Courier");
     font.setFixedPitch(true);
@@ -38,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionSource, SIGNAL(triggered()),this,SLOT(viewSource()));
     connect(ui->actionDirectory, SIGNAL(triggered()),this,SLOT(viewDirectory()));
     connect(ui->listView, SIGNAL(clicked(QModelIndex)), this, SLOT(dirViewClicked(QModelIndex)));
+
 
     ui->actionSave->setEnabled(false);
     ui->sourceView->hide();
@@ -187,9 +191,9 @@ void MainWindow::textChanged(){
     t.start();
     QString newText = wrapInHTMLDoc(markdown(ui->plainTextEdit->toPlainText()));
     ui->statusBar->showMessage(QString("Render time: %1 ms").arg(t.elapsed()));
-    QPoint pos = ui->webView->page()->currentFrame()->scrollPosition();
-    ui->webView->setHtml(newText);
-    ui->webView->page()->currentFrame()->setScrollPosition(pos);
+    QPoint pos = hswv->page()->currentFrame()->scrollPosition();
+    hswv->setHtml(newText);
     ui->sourceView->setPlainText(newText);
+    hswv->page()->currentFrame()->setScrollPosition(pos);
 }
 
