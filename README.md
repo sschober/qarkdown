@@ -11,7 +11,14 @@ Edit text in an editor on the left side of the app and see a preview of the rend
 - `CTRL-U` displays a source view.
 - `CTRL-O` opens a file
 - `CTRL-S` saves the file
+- `CTRL-N` start a fresh file (pressing `CTRL-S` asks for file name)
 - `CTRL-D` opens a directory view on the left
+
+### Details 
+
+The rendered markdown content is wrapped in a `HTML`-Document, which includes a custom [`bootstrap.css`](http://twitter.github.com/bootstrap/) style sheet. The only thing i added to the style sheet is horizontal columnization, so the rendered content grows columnwise to the right. I modified/customized `QWebView` to scroll horizontally on mouse wheel events (see my struggles [here](http://stackoverflow.com/questions/10721118/let-qwebview-scroll-horizontally-on-mouse-wheel/10754333#10754333)).
+
+On changing the currently opened file using the directory view (which happens by using a _single_ left click) the current file is saved without further enquiries. This might be unexpected for you...
 
 ## Dependencies
 
@@ -31,7 +38,6 @@ should do it.
 
 - Customizable UI - Configurable editor position and size, e.g. fixed column size
 - Versioning - maybe based on `git`
-- Simple file switching - maybe enabled by a little file browser on the left side of the app
 - Some kind of journal support - Ability to add a new entry/file/whatever tagged by the current date and time just by hitting a single key combo (`CTRL-N`)
 
 ## Author
