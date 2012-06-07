@@ -12,10 +12,15 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    hscrollwebview.cpp
+    hscrollwebview.cpp \
+    pmh_parser.c \
+    highlighter.cpp
 
 HEADERS  += mainwindow.h \
-    hscrollwebview.h
+    hscrollwebview.h \
+    pmh_parser.h \
+    pmh_definitions.h \
+    highlighter.h
 
 FORMS    += mainwindow.ui
 

@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "highlighter.h"
 
 #include <markdown.h>
 #include <html.h>
@@ -26,6 +27,8 @@ MainWindow::MainWindow(QWidget *parent) :
     font.setFixedPitch(true);
     font.setPointSize(10);
     ui->plainTextEdit->setFont(font);
+
+    new HGMarkdownHighlighter(ui->plainTextEdit->document(), 1000);
 
     ui->actionNew->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_N));
     ui->actionOpen->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_O));

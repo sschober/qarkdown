@@ -30,7 +30,7 @@
       <widget class="QPlainTextEdit" name="plainTextEdit">
        <property name="minimumSize">
         <size>
-         <width>600</width>
+         <width>0</width>
          <height>0</height>
         </size>
        </property>
@@ -46,7 +46,7 @@
      <x>0</x>
      <y>0</y>
      <width>838</width>
-     <height>24</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
