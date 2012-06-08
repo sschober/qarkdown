@@ -6,13 +6,15 @@ A [Qt](http://qt.nokia.com/products/) [markdown](http://daringfireball.net/proje
 
 Edit text in an editor on the left side of the app and see a preview of the rendered markdown/html output on the right. The app is kept decidedly simple. You can load and save files. The window title displays the currently opened file.
 
+Markdown text is syntax highlighted using Ali Rantakari's nice [PEG Markdown Highlighter](http://hasseg.org/peg-markdown-highlight/).
+
 ### Keyboard shortcuts
 
 - `CTRL-U` displays a source view.
 - `CTRL-O` opens a file
 - `CTRL-S` saves the file
 - `CTRL-N` start a fresh file (pressing `CTRL-S` asks for file name)
-- `CTRL-D` opens a directory view on the left
+- `CTRL-D` opens a directory view on the left, which shows the contents of the parent folder of the currently opened file.
 
 ### Details 
 
@@ -39,7 +41,8 @@ should do it.
 - Customizable UI - Configurable editor position and size, e.g. fixed column size
 - Versioning - maybe based on `git`
 - Some kind of journal support - Ability to add a new entry/file/whatever tagged by the current date and time just by hitting a single key combo (`CTRL-N`)
+- Make use of the syntax highlighting style parser that comes with the peg markdown highlighter
 
 ## Author
 
-Sven schober
+[Sven Schober](mailto:sschober@sssm.de)

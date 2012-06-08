@@ -25,7 +25,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QFont font;
     font.setFamily("Courier");
     font.setFixedPitch(true);
-    font.setPointSize(10);
+    font.setPointSize(15);
     ui->plainTextEdit->setFont(font);
 
     new HGMarkdownHighlighter(ui->plainTextEdit->document(), 1000);
