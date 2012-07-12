@@ -50,6 +50,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->sourceView->hide();
 
     ui->listView->hide();
+
+    if(qApp->arguments().size() > 1){
+        // a file was given on the command line
+        openFile(qApp->arguments().at(1));
+    }
 }
 
 void MainWindow::fileNew(){
