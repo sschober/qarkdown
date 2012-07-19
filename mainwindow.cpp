@@ -101,7 +101,7 @@ MainWindow::~MainWindow()
 void MainWindow::openFile(QString fileName){
     if(NULL != fileName){
         currentFile = new QFile(fileName);
-        if (!currentFile->open(QIODevice::ReadOnly | QIODevice::Text))
+        if (!currentFile->open(QIODevice::ReadWrite | QIODevice::Text))
             return;
         QString fileContent;
         QTextStream in(currentFile);
