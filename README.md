@@ -36,6 +36,12 @@ The usual
 
 should do it.
 
+## Invoking
+
+    qarkdown [<file>]
+
+If `<file>` is given it is opened and displayd when it exists. Otherwise it is created.
+
 ## Feature Ideas
 
 - Customizable UI - Configurable editor position and size, e.g. fixed column size
