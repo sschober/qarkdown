@@ -35,11 +35,13 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->actionSave->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_S));
     ui->actionSource->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_U));
     ui->actionDirectory->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_D));
+    ui->actionExport_HTML->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_E));
 
     connect(ui->plainTextEdit, SIGNAL(textChanged()),this, SLOT(textChanged()));
     connect(ui->actionNew, SIGNAL(triggered()), this, SLOT(fileNew()));
     connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(fileOpen()));
     connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(fileSave()));
+    connect(ui->actionExport_HTML, SIGNAL(triggered()), this, SLOT(fileSaveHTML()));
     connect(ui->actionSave_As, SIGNAL(triggered()), this, SLOT(fileSaveAs()));
     connect(ui->actionSource, SIGNAL(triggered()),this,SLOT(viewSource()));
     connect(ui->actionDirectory, SIGNAL(triggered()),this,SLOT(viewDirectory()));
@@ -47,6 +49,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     ui->actionSave->setEnabled(false);
+    ui->actionExport_HTML->setEnabled(false);
     ui->sourceView->hide();
 
     ui->listView->hide();
@@ -114,6 +117,7 @@ void MainWindow::openFile(QString fileName){
         currentFile->close();
         ui->plainTextEdit->setPlainText(fileContent);
         ui->actionSave->setEnabled(true);
+        ui->actionExport_HTML->setEnabled(true);
         setWindowTitle(fileName);
         updateListView();
     }
@@ -151,12 +155,41 @@ void MainWindow::fileSave(){
     updateListView();
 }
 
+static QFile* getHTMLFilename(QFile *file){
+    QFileInfo qfi(*file);
+    QString htmlFilename = qfi.path() + "/";
+    if(qfi.suffix() == "md" || qfi.suffix() == "mkd"){
+        htmlFilename +=  qfi.baseName() + ".html";
+    }
+    else {
+        htmlFilename +=  qfi.fileName() + ".html";
+    }
+    return new QFile(htmlFilename);
+}
+
+void MainWindow::fileSaveHTML(){
+    if(NULL == currentFile){
+        QString newFileName = QFileDialog::getSaveFileName();
+        currentFile = new QFile(newFileName);
+        setWindowTitle(newFileName);
+     }
+    QFile *htmlFile = getHTMLFilename(currentFile);
+    if (!htmlFile->open(QIODevice::WriteOnly | QIODevice::Text))
+        return;
+    QTextStream out(htmlFile);
+    // this is not optimal, as the css is referenced via qrc
+    // and thus no longer applies in the resulting html document.
+    out << hswv->page()->currentFrame()->toHtml();
+    htmlFile->close();
+}
+
 void MainWindow::fileSaveAs(){
     QString fileName = QFileDialog::getSaveFileName(this,tr("Save File As"));
     if(NULL != fileName ){
         currentFile = new QFile(fileName);
         // this should be coupled to a dirty flag actually...
         ui->actionSave->setEnabled(true);
+        ui->actionExport_HTML->setEnabled(true);
         setWindowTitle(fileName);
         fileSave();
     }

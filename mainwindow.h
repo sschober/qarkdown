@@ -24,6 +24,7 @@ public slots:
     void fileNew();
     void fileOpen();
     void fileSave();
+    void fileSaveHTML();
     void fileSaveAs();
     void viewSource();
     void viewDirectory();

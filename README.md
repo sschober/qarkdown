@@ -13,6 +13,7 @@ Markdown text is syntax highlighted using Ali Rantakari's nice [PEG Markdown Hig
 - `CTRL-U` displays a source view.
 - `CTRL-O` opens a file
 - `CTRL-S` saves the file
+- `CTRL-E` exports the file as HTML (replacing a `md[k]` suffix by `html`)
 - `CTRL-N` start a fresh file (pressing `CTRL-S` asks for file name)
 - `CTRL-D` opens a directory view on the left, which shows the contents of the parent folder of the currently opened file.
 
