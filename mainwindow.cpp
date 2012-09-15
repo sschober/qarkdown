@@ -13,6 +13,8 @@
 #include <QWebFrame>
 #include <QFileSystemModel>
 
+#include <cmath> // for round
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -22,11 +24,19 @@ MainWindow::MainWindow(QWidget *parent) :
     hswv = new HScrollWebView(this);
     ui->splitter->addWidget(hswv);
 
+    // Set font
     QFont font;
     font.setFamily("Courier");
     font.setFixedPitch(true);
     font.setPointSize(15);
     ui->plainTextEdit->setFont(font);
+
+    const float targetWidth = 67.0;
+    // set plaintextedit to 80 character column width
+    int columnWidth = round( QFontMetrics(font).averageCharWidth() * targetWidth)
+           // + ui->plainTextEdit->contentOffset().x()
+            + ui->plainTextEdit->document()->documentMargin();
+    ui->plainTextEdit->setFixedWidth(columnWidth);
 
     new HGMarkdownHighlighter(ui->plainTextEdit->document(), 1000);
 
