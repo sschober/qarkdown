@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
     a.setWindowIcon( QIcon( ":/icons/application.png" ) );
 
     MainWindow w;
-    w.show();
+    w.showMaximized();
 
     QObject::connect(&a, SIGNAL( lastWindowClosed() ), &a, SLOT( quit() ) );
     return a.exec();
