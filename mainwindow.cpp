@@ -12,23 +12,37 @@
 #include <QDebug>
 #include <QWebFrame>
 #include <QFileSystemModel>
+#include <QLabel>
+#include <QMessageBox>
+#include <QComboBox>
+#include <QTextDocument>
+#include <QInputDialog>
 
 #include <cmath> // for round
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    currentFile(NULL),
+    renderLabel(new QLabel)
 {
     ui->setupUi(this);
+    statusBar()->addPermanentWidget( renderLabel );
 
-    hswv = new HScrollWebView(this);
-    ui->splitter->addWidget(hswv);
+    QComboBox* headerComboBox = new QComboBox( this );
+
+    for ( int i = 1; i <= 6; i++ ) {
+        headerComboBox->addItem( QString( "H%1" ).arg( i ), i );
+    }
+
+    QAction* separator = ui->toolBar->insertSeparator( ui->actionBold );
+    ui->toolBar->insertWidget( separator, headerComboBox );
 
     // Set font
     QFont font;
     font.setFamily("Courier");
     font.setFixedPitch(true);
-    font.setPointSize(15);
+    font.setPointSize(font.pointSize() +5);
     ui->plainTextEdit->setFont(font);
 
     const float targetWidth = 67.0;
@@ -40,9 +54,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     new HGMarkdownHighlighter(ui->plainTextEdit->document(), 1000);
 
-    ui->actionNew->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_N));
-    ui->actionOpen->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_O));
-    ui->actionSave->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_S));
+    ui->actionNew->setShortcut(QKeySequence::New);
+    ui->actionOpen->setShortcut(QKeySequence::Open);
+    ui->actionSave->setShortcut(QKeySequence::Save);
     ui->actionSource->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_U));
     ui->actionDirectory->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_D));
     ui->actionExport_HTML->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_E));
@@ -56,10 +70,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionSource, SIGNAL(triggered()),this,SLOT(viewSource()));
     connect(ui->actionDirectory, SIGNAL(triggered()),this,SLOT(viewDirectory()));
     connect(ui->listView, SIGNAL(clicked(QModelIndex)), this, SLOT(dirViewClicked(QModelIndex)));
+    connect( ui->plainTextEdit, SIGNAL( modificationChanged( bool ) ), this, SLOT( setWindowModified( bool ) ) );
+    connect( ui->actionAbout, SIGNAL( triggered() ), this, SLOT( about() ) );
+    connect( ui->actionAbout_Qt, SIGNAL( triggered() ), this, SLOT( aboutQt() ) );
+    connect( headerComboBox, SIGNAL( activated( int ) ), this, SLOT( headerComboBox_activated( int ) ) );
 
-
-    ui->actionSave->setEnabled(false);
-    ui->actionExport_HTML->setEnabled(false);
     ui->sourceView->hide();
 
     ui->listView->hide();
@@ -68,14 +83,20 @@ MainWindow::MainWindow(QWidget *parent) :
         // a file was given on the command line
         openFile(qApp->arguments().at(1));
     }
+    else {
+        fileNew();
+    }
 }
 
 void MainWindow::fileNew(){
     if(NULL != currentFile){
         fileSave();
     }
-    currentFile = NULL;
-    ui->plainTextEdit->setPlainText("");
+    delete currentFile;
+    ui->plainTextEdit->clear();
+    ui->plainTextEdit->document()->setModified( true );
+    ui->plainTextEdit->document()->setModified( false );
+    setWindowFilePath( tr( "[New File]" ) );
 }
 
 void MainWindow::dirViewClicked(QModelIndex idx){
@@ -86,6 +107,28 @@ void MainWindow::dirViewClicked(QModelIndex idx){
 
     openFile(model->filePath(idx));
 
+}
+
+void MainWindow::about()
+{
+    QMessageBox::information( this, QString::null, tr( "%1 v%2" ).arg( qApp->applicationName() ).arg( qApp->applicationVersion() ) );
+}
+
+void MainWindow::aboutQt()
+{
+    qApp->aboutQt();
+}
+
+void MainWindow::closeEvent( QCloseEvent* event )
+{
+    if ( NULL != currentFile ) {
+        fileSave();
+    }
+    else if ( ui->plainTextEdit->document()->isModified() ) {
+        fileSaveAs();
+    }
+
+    QMainWindow::closeEvent( event );
 }
 
 void MainWindow::viewSource(){
@@ -113,9 +156,12 @@ MainWindow::~MainWindow()
 
 void MainWindow::openFile(QString fileName){
     if(NULL != fileName){
+        delete currentFile;
         currentFile = new QFile(fileName);
-        if (!currentFile->open(QIODevice::ReadWrite | QIODevice::Text))
+        if (!currentFile->open(QIODevice::ReadWrite | QIODevice::Text)) {
+            delete currentFile;
             return;
+        }
         QString fileContent;
         QTextStream in(currentFile);
         QString line;
@@ -126,9 +172,7 @@ void MainWindow::openFile(QString fileName){
         }
         currentFile->close();
         ui->plainTextEdit->setPlainText(fileContent);
-        ui->actionSave->setEnabled(true);
-        ui->actionExport_HTML->setEnabled(true);
-        setWindowTitle(fileName);
+        setWindowFilePath(fileName);
         updateListView();
     }
 
@@ -147,6 +191,23 @@ void MainWindow::updateListView(){
     ui->listView->setRootIndex(model->index(path));
 }
 
+QString MainWindow::selectedText()
+{
+    return ui->plainTextEdit->textCursor().selectedText();
+}
+
+void MainWindow::replaceSelectedTextBy( const QString& text )
+{
+    QTextCursor cursor = ui->plainTextEdit->textCursor();
+    cursor.insertText( text );
+    ui->plainTextEdit->setTextCursor( cursor );
+}
+
+void MainWindow::insertTextAtCursorPosition( const QString& text )
+{
+    replaceSelectedTextBy( text );
+}
+
 void MainWindow::fileOpen(){
     openFile(QFileDialog::getOpenFileName(this,tr("Open File"),"","*.md *.mkd"));
 }
@@ -155,14 +216,18 @@ void MainWindow::fileSave(){
     if(NULL == currentFile){
         QString newFileName = QFileDialog::getSaveFileName();
         currentFile = new QFile(newFileName);
-        setWindowTitle(newFileName);
+        setWindowFilePath(newFileName);
     }
-    if (!currentFile->open(QIODevice::WriteOnly | QIODevice::Text))
+    if (!currentFile->open(QIODevice::WriteOnly | QIODevice::Text)) {
+        delete currentFile;
         return;
+    }
     QTextStream out(currentFile);
     out << ui->plainTextEdit->toPlainText();
     currentFile->close();
+    ui->plainTextEdit->document()->setModified( false );
     updateListView();
+    statusBar()->showMessage( tr( "%1 has been saved" ).arg( currentFile->fileName() ) );
 }
 
 static QFile* getHTMLFilename(QFile *file){
@@ -181,26 +246,26 @@ void MainWindow::fileSaveHTML(){
     if(NULL == currentFile){
         QString newFileName = QFileDialog::getSaveFileName();
         currentFile = new QFile(newFileName);
-        setWindowTitle(newFileName);
+        setWindowFilePath(newFileName);
      }
     QFile *htmlFile = getHTMLFilename(currentFile);
-    if (!htmlFile->open(QIODevice::WriteOnly | QIODevice::Text))
+    if (!htmlFile->open(QIODevice::WriteOnly | QIODevice::Text)) {
+        delete currentFile;
         return;
+    }
     QTextStream out(htmlFile);
     // this is not optimal, as the css is referenced via qrc
     // and thus no longer applies in the resulting html document.
-    out << hswv->page()->currentFrame()->toHtml();
+    out << ui->hswv->page()->currentFrame()->toHtml();
     htmlFile->close();
 }
 
 void MainWindow::fileSaveAs(){
     QString fileName = QFileDialog::getSaveFileName(this,tr("Save File As"));
     if(NULL != fileName ){
+        delete currentFile;
         currentFile = new QFile(fileName);
-        // this should be coupled to a dirty flag actually...
-        ui->actionSave->setEnabled(true);
-        ui->actionExport_HTML->setEnabled(true);
-        setWindowTitle(fileName);
+        setWindowFilePath(fileName);
         fileSave();
     }
 }
@@ -241,10 +306,110 @@ void MainWindow::textChanged(){
     QTime t;
     t.start();
     QString newText = wrapInHTMLDoc(markdown(ui->plainTextEdit->toPlainText()));
-    ui->statusBar->showMessage(QString("Render time: %1 ms").arg(t.elapsed()));
-    QPoint pos = hswv->page()->currentFrame()->scrollPosition();
-    hswv->setHtml(newText);
+    renderLabel->setText(QString("Render time: %1 ms").arg(t.elapsed()));
+    QPoint pos = ui->hswv->page()->currentFrame()->scrollPosition();
+    ui->hswv->setHtml(newText);
     ui->sourceView->setPlainText(newText);
-    hswv->page()->currentFrame()->setScrollPosition(pos);
+    ui->hswv->page()->currentFrame()->setScrollPosition(pos);
 }
 
+void MainWindow::on_actionBold_triggered()
+{
+    const QString text = selectedText();
+
+    if ( text.isEmpty() ) {
+        return;
+    }
+
+    replaceSelectedTextBy( QString( "**%1**" ).arg( text ) );
+}
+
+void MainWindow::on_actionItalic_triggered()
+{
+    const QString text = selectedText();
+
+    if ( text.isEmpty() ) {
+        return;
+    }
+
+    replaceSelectedTextBy( QString( "_%1_" ).arg( text ) );
+}
+
+void MainWindow::on_actionBullet_triggered()
+{
+    const QString text = selectedText();
+    replaceSelectedTextBy( QString( "* %1" ).arg( text ) );
+}
+
+void MainWindow::on_actionNumbered_Bullet_triggered()
+{
+    const QString text = selectedText();
+    replaceSelectedTextBy( QString( "1. %1" ).arg( text ) );
+}
+
+void MainWindow::on_actionCode_triggered()
+{
+    const QString language = QInputDialog::getText( this, QString::null, tr( "Enter the language name:" ) );
+
+    if ( language.isEmpty() ) {
+        return;
+    }
+
+    insertTextAtCursorPosition( QString( ":::%1" ).arg( language ) );
+}
+
+void MainWindow::on_actionLink_triggered()
+{
+    const QString text = QInputDialog::getText( this, QString::null, tr( "Enter the link text:" ) );
+
+    if ( text.isEmpty() ) {
+        return;
+    }
+
+    const QString url = QInputDialog::getText( this, QString::null, tr( "Enter the link url:" ) );
+
+    if ( url.isEmpty() ) {
+        return;
+    }
+
+    insertTextAtCursorPosition( QString( "[%1](%2)" ).arg( text ).arg( url ) );
+}
+
+void MainWindow::on_actionImage_triggered()
+{
+    const QString text = QInputDialog::getText( this, QString::null, tr( "Enter the image alt text:" ) );
+
+    if ( text.isEmpty() ) {
+        return;
+    }
+
+    const QString url = QInputDialog::getText( this, QString::null, tr( "Enter the image url:" ) );
+
+    if ( url.isEmpty() ) {
+        return;
+    }
+
+    insertTextAtCursorPosition( QString( "[%1](%2)" ).arg( text ).arg( url ) );
+}
+
+void MainWindow::headerComboBox_activated( int index )
+{
+    QString text = selectedText();
+
+    if ( text.isEmpty() ) {
+        return;
+    }
+
+    const int count = index +1;
+    const QString header = QString( count, '#' );
+
+    if ( text.startsWith( "#" ) ) {
+        while ( text.startsWith( "#" ) ) {
+            text.remove( 0, 1 );
+        }
+
+        text.remove( 0, 1 );
+    }
+
+    replaceSelectedTextBy( QString( "%1 %2" ).arg( header ).arg( text ) );
+}

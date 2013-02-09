@@ -12,13 +12,15 @@ HEADERS *= mainwindow.h \
     hscrollwebview.h \
     pmh_parser.h \
     pmh_definitions.h \
-    highlighter.h
+    highlighter.h \
+    PlainTextEditor.h
 
 SOURCES *= main.cpp \
     mainwindow.cpp \
     hscrollwebview.cpp \
     pmh_parser.c \
-    highlighter.cpp
+    highlighter.cpp \
+    PlainTextEditor.cpp
 
 OTHER_FILES *= README.md
 
