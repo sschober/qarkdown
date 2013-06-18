@@ -1,33 +1,31 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2012-05-14T21:08:10
-#
-#-------------------------------------------------
-
-QT       += core gui webkit
-
-TARGET = qarkdown
 TEMPLATE = app
+TARGET = qarkdown
 
+CONFIG -= release debug debug_and_release
+QT *= core gui webkit
 
-SOURCES += main.cpp\
-        mainwindow.cpp \
-    hscrollwebview.cpp \
-    pmh_parser.c \
-    highlighter.cpp
+RESOURCES *= ressources.qrc
 
-HEADERS  += mainwindow.h \
+FORMS *= mainwindow.ui
+
+HEADERS *= mainwindow.h \
     hscrollwebview.h \
     pmh_parser.h \
     pmh_definitions.h \
-    highlighter.h
+    highlighter.h \
+    PlainTextEditor.h
 
-FORMS    += mainwindow.ui
+SOURCES *= main.cpp \
+    mainwindow.cpp \
+    hscrollwebview.cpp \
+    pmh_parser.c \
+    highlighter.cpp \
+    PlainTextEditor.cpp
 
-LIBS    += -lsundown
+OTHER_FILES *= README.md
 
-OTHER_FILES += \
-    README.md
-
-RESOURCES += \
-    ressources.qrc
+exists( sundown ) {
+    include( sundown.pri )
+} else {
+    LIBS *= -lsundown
+}
