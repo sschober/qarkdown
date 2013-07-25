@@ -50,6 +50,7 @@ If `<file>` is given it is opened and displayd when it exists. Otherwise it is c
 - Some kind of journal support - Ability to add a new entry/file/whatever tagged by the current date and time just by hitting a single key combo (`CTRL-N`)
 - Make use of the syntax highlighting style parser that comes with the peg markdown highlighter
 
-## Author
+## Authors
 
-[Sven Schober](mailto:sschober@sssm.de)
+* [Sven Schober](mailto:sschober@sssm.de)
+* [pasnox](mailto:pasnox@gmail.com)
