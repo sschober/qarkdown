@@ -277,18 +277,18 @@ static QString markdown(QString in){
     struct sd_markdown *mkd;
 
     if(in.size() > 0){
-        std::string ss = in.toStdString();
-        const char *txt = ss.c_str();
+        QByteArray qba = in.toUtf8();
+        const char *txt = qba.constData();
         if(NULL == txt) qDebug() << "txt was null!";
-        if(0 < qstrlen(txt)){
-            ib = bufnew(qstrlen(txt));
+        if(0 < qba.size()){
+            ib = bufnew(qba.size());
             bufputs(ib,txt);
             ob = bufnew(64);
             sdhtml_renderer(&cbs,&opts,0);
             mkd = sd_markdown_new(0,16,&cbs,&opts);
             sd_markdown_render(ob,ib->data,ib->size,mkd);
             sd_markdown_free(mkd);
-            return QString(bufcstr(ob));
+            return QString::fromUtf8(bufcstr(ob));
         }
         else
             qDebug() <<"qstrlen was null";
@@ -298,18 +298,19 @@ static QString markdown(QString in){
 
 static QString wrapInHTMLDoc(QString in){
     return in
-            .prepend("<html>\n <head>\n  <link type=\"text/css\" rel=\"stylesheet\" href=\"qrc:///css/bootstrap.css\"/>\n </head>\n <body>\n")
+            .prepend("<html>\n <head>\n <meta charset=\"utf-8\">\n  <link type=\"text/css\" rel=\"stylesheet\" href=\"qrc:///css/bootstrap.css\"/>\n </head>\n <body>\n")
             .append("\n </body>\n</html>");
 }
 
 void MainWindow::textChanged(){
     QTime t;
     t.start();
-    QString newText = wrapInHTMLDoc(markdown(ui->plainTextEdit->toPlainText()));
+    QString newText = markdown(ui->plainTextEdit->toPlainText());
+    QString newHTML = wrapInHTMLDoc(newText);
     renderLabel->setText(QString("Render time: %1 ms").arg(t.elapsed()));
     QPoint pos = ui->hswv->page()->currentFrame()->scrollPosition();
-    ui->hswv->setHtml(newText);
-    ui->sourceView->setPlainText(newText);
+    ui->hswv->setHtml(newHTML);
+    ui->sourceView->setPlainText(newHTML);
     ui->hswv->page()->currentFrame()->setScrollPosition(pos);
 }
 
