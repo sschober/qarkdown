@@ -1,6 +1,21 @@
 # qarkdown
 
-A [Qt](http://qt.nokia.com/products/) [markdown](http://daringfireball.net/projects/markdown/) preview app.
+A [markdown](http://daringfireball.net/projects/markdown/) editor sporting a nice instant preview and syntax highlighting.
+
+It is written in [Qt](http://qt.nokia.com/products/). It can handle UTF-8 encoded texts, so nice [box drawings](http://en.wikipedia.org/wiki/Box-drawing_character) like theses are possible:
+
+    ┌────────┐    has    ┌────────────────┐
+    │ Person │──────────>│ Role           │
+    └────────┘      1..n ├────────────────┤
+        │                │+Expire : Date  │
+    has │                └────────────────┘
+        │1..m                     │
+        v                         │
+    ┌────────────────┐            │
+    │ Subscription   │ 1..l       │ implies
+    ├────────────────┤ <──────────┘
+    │+Expire : Date  │
+    └────────────────┘
 
 ## Features
 
@@ -16,6 +31,7 @@ Markdown text is syntax highlighted using Ali Rantakari's nice [PEG Markdown Hig
 - `CTRL-E` exports the file as HTML (replacing a `md[k]` suffix by `html`)
 - `CTRL-N` start a fresh file (pressing `CTRL-S` asks for file name)
 - `CTRL-D` opens a directory view on the left, which shows the contents of the parent folder of the currently opened file.
+- Pressing `TAB` on selected Text indents it by 4 characters (handy for code listings).
 
 ### Details 
 
@@ -25,7 +41,7 @@ On changing the currently opened file using the directory view (which happens by
 
 ## Dependencies
 
-- Qt 4.7.4 or higher (not tested with older versions)
+- Qt 5+ (no longer tested with older versions)
 - [sundown-0.1](https://github.com/sschober/sundown)
 
 ## Building
@@ -48,7 +64,6 @@ If `<file>` is given it is opened and displayd when it exists. Otherwise it is c
 - Customizable UI - Configurable editor position and size, e.g. fixed column size
 - Versioning - maybe based on `git`
 - Some kind of journal support - Ability to add a new entry/file/whatever tagged by the current date and time just by hitting a single key combo (`CTRL-N`)
-- Make use of the syntax highlighting style parser that comes with the peg markdown highlighter
 
 ## Authors
 
