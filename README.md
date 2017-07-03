@@ -41,8 +41,7 @@ On changing the currently opened file using the directory view (which happens by
 
 ## Dependencies
 
-- Qt 5+ (no longer tested with older versions)
-- [sundown-0.1](https://github.com/sschober/sundown)
+- Qt 5.9.1 (no longer tested with older versions)
 
 ## Building
 
