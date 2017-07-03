@@ -2,7 +2,6 @@
 #include "ui_mainwindow.h"
 #include "highlighter.h"
 
-#include <markdown.h>
 #include <html.h>
 #include <buffer.h>
 
@@ -274,24 +273,26 @@ void MainWindow::fileSaveAs(){
 }
 
 static QString markdown(QString in){
-    struct buf *ib, *ob;
-    struct sd_callbacks cbs;
-    struct html_renderopt opts;
-    struct sd_markdown *mkd;
 
     if(in.size() > 0){
         QByteArray qba = in.toUtf8();
         const char *txt = qba.constData();
         if(NULL == txt) qDebug() << "txt was null!";
         if(0 < qba.size()){
-            ib = bufnew(qba.size());
-            bufputs(ib,txt);
-            ob = bufnew(64);
-            sdhtml_renderer(&cbs,&opts,0);
-            mkd = sd_markdown_new(0,16,&cbs,&opts);
-            sd_markdown_render(ob,ib->data,ib->size,mkd);
-            sd_markdown_free(mkd);
-            return QString::fromUtf8(bufcstr(ob));
+            hoedown_renderer *renderer = hoedown_html_renderer_new((hoedown_html_flags)NULL,16);
+            // TODO: investigate further extensions
+            unsigned int extensions = HOEDOWN_EXT_FOOTNOTES;
+            hoedown_document *document = hoedown_document_new(renderer, (hoedown_extensions)extensions, 16);
+            hoedown_buffer *in_buf = hoedown_buffer_new(qba.size());
+            hoedown_buffer_puts(in_buf, txt);
+            hoedown_buffer *html = hoedown_buffer_new(64);
+            hoedown_document_render(document, html, in_buf->data,in_buf->size);
+            QString result(QString::fromUtf8(hoedown_buffer_cstr(html)));
+            hoedown_buffer_free(html);
+            hoedown_buffer_free(in_buf);
+            hoedown_document_free(document);
+            hoedown_html_renderer_free(renderer);
+            return result;
         }
         else
             qDebug() <<"qstrlen was null";
