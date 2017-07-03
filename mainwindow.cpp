@@ -253,12 +253,14 @@ void MainWindow::fileSaveHTML(){
         return;
     }
 
-    QTextStream out(htmlFile);
     // TODO: this is not optimal, as the css is referenced via qrc and thus no longer applies in the resulting html document.
     // the API of WebEnginePage is asynchronous, so we have to provide a lamda expression
-    ui->hswv->page()->toHtml([&out](const QString &result){ out << result; });
+    ui->hswv->page()->toHtml([htmlFile](const QString &result){
+      QTextStream out(htmlFile);
+      out << result;
+      htmlFile->close();
+    });
 
-    htmlFile->close();
 }
 
 void MainWindow::fileSaveAs(){
@@ -298,9 +300,11 @@ static QString markdown(QString in){
 }
 
 static QString wrapInHTMLDoc(QString in){
-    return in
+    QString result(in
             .prepend("<html>\n <head>\n <meta charset=\"utf-8\">\n  <link type=\"text/css\" rel=\"stylesheet\" href=\"qrc:///css/bootstrap.css\"/>\n </head>\n <body>\n")
-            .append("\n </body>\n</html>");
+            .append("\n </body>\n</html>"));
+//    qDebug() << result.toStdString().c_str();
+    return result;
 }
 
 void MainWindow::textChanged(){
@@ -313,7 +317,7 @@ void MainWindow::textChanged(){
     // store scrollposition of webengine view before updating contents
     QPointF pos = ui->hswv->page()->scrollPosition();
 
-    ui->hswv->setHtml(newText);
+    ui->hswv->page()->setHtml(newHTML);
     ui->sourceView->setPlainText(newText);
 
     // restore focus to pte, as of some new version of Qt it seems to be lost during updating the other views
