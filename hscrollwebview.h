@@ -1,9 +1,9 @@
 #ifndef HSCROLLWEBVIEW_H
 #define HSCROLLWEBVIEW_H
 
-#include <QWebView>
+#include <QWebEngineView>
 
-class HScrollWebView : public QWebView
+class HScrollWebView : public QWebEngineView
 {
     Q_OBJECT
 public:

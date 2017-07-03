@@ -1,14 +1,12 @@
 #include "hscrollwebview.h"
 #include <QDebug>
 #include <QWheelEvent>
-#include <QWebPage>
-#include <QWebFrame>
 
 HScrollWebView::HScrollWebView(QWidget *parent) :
-    QWebView(parent)
+    QWebEngineView(parent)
 {
 }
 
 void HScrollWebView::wheelEvent(QWheelEvent *ev){
-    page()->currentFrame()->scroll(-1 * ev->delta(),0);
+  this->page()->runJavaScript(QString("window.scrollBy(%1, 0);").arg( ev->delta()));
 }

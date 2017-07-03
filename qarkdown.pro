@@ -2,7 +2,7 @@ TEMPLATE = app
 TARGET = qarkdown
 
 CONFIG -= release debug debug_and_release
-QT *= core gui webkit
+QT *= core gui widgets webenginewidgets
 
 RESOURCES *= ressources.qrc
 

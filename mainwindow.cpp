@@ -10,7 +10,6 @@
 #include <QTextStream>
 #include <QTime>
 #include <QDebug>
-#include <QWebFrame>
 #include <QFileSystemModel>
 #include <QLabel>
 #include <QMessageBox>
@@ -253,10 +252,12 @@ void MainWindow::fileSaveHTML(){
         delete currentFile;
         return;
     }
+
     QTextStream out(htmlFile);
-    // this is not optimal, as the css is referenced via qrc
-    // and thus no longer applies in the resulting html document.
-    out << ui->hswv->page()->currentFrame()->toHtml();
+    // TODO: this is not optimal, as the css is referenced via qrc and thus no longer applies in the resulting html document.
+    // the API of WebEnginePage is asynchronous, so we have to provide a lamda expression
+    ui->hswv->page()->toHtml([&out](const QString &result){ out << result; });
+
     htmlFile->close();
 }
 
@@ -308,10 +309,18 @@ void MainWindow::textChanged(){
     QString newText = markdown(ui->plainTextEdit->toPlainText());
     QString newHTML = wrapInHTMLDoc(newText);
     renderLabel->setText(QString("Render time: %1 ms").arg(t.elapsed()));
-    QPoint pos = ui->hswv->page()->currentFrame()->scrollPosition();
-    ui->hswv->setHtml(newHTML);
-    ui->sourceView->setPlainText(newHTML);
-    ui->hswv->page()->currentFrame()->setScrollPosition(pos);
+
+    // store scrollposition of webengine view before updating contents
+    QPointF pos = ui->hswv->page()->scrollPosition();
+
+    ui->hswv->setHtml(newText);
+    ui->sourceView->setPlainText(newText);
+
+    // restore focus to pte, as of some new version of Qt it seems to be lost during updating the other views
+    ui->plainTextEdit->setFocus();
+
+    // restore scrollposition via javascrip
+    ui->hswv->page()->runJavaScript(QString("window.scrollTo(%1, %2);").arg(pos.x()).arg(pos.y()));
 }
 
 void MainWindow::on_actionBold_triggered()
