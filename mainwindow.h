@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QModelIndex>
 #include <QPointer>
+#include <QSettings>
 
 #include "hscrollwebview.h"
 
@@ -47,6 +48,8 @@ private slots:
     void on_actionLink_triggered();
     void on_actionImage_triggered();
     void headerComboBox_activated( int index );
+    void on_actionSettings_triggered();
+    //TODO: void on_actionProjectSettings_triggerd(); - should be analogous to on_actionSettings_triggered()
 
 private:
     void openFile(QString fileName);
@@ -54,10 +57,18 @@ private:
     QString selectedText();
     void replaceSelectedTextBy( const QString& text );
     void insertTextAtCursorPosition( const QString& text );
+    void readUserSettings();
+    void writeUserSettings();
+    void readProjectSettings();
+    QString wrapInHTML(QString in);
 
     Ui::MainWindow *ui;
     QPointer<QFile> currentFile;
     QLabel* renderLabel;
+    QFont* currentFont;
+    bool reopenLastFile = false;
+    QSettings* userSettings;
+    QSettings* projectSettings;
 };
 
 #endif // MAINWINDOW_H

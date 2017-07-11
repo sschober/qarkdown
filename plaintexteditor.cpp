@@ -2,7 +2,7 @@
  * Indent / Unindent code taken from project at: https://code.google.com/p/kodepad
  **/
 
-#include "PlainTextEditor.h"
+#include "plaintexteditor.h"
 
 #include <QTextCursor>
 #include <QTextBlock>

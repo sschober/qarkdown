@@ -6,21 +6,22 @@ QT *= core gui widgets webenginewidgets
 
 RESOURCES *= ressources.qrc
 
-FORMS *= mainwindow.ui
+FORMS *= mainwindow.ui \
+    settings.ui
 
 HEADERS *= mainwindow.h \
     hscrollwebview.h \
     pmh_parser.h \
     pmh_definitions.h \
     highlighter.h \
-    PlainTextEditor.h
+    plaintexteditor.h
 
 SOURCES *= main.cpp \
     mainwindow.cpp \
     hscrollwebview.cpp \
     pmh_parser.c \
     highlighter.cpp \
-    PlainTextEditor.cpp
+    plaintexteditor.cpp
 
 OTHER_FILES *= README.md
 

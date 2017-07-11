@@ -5,8 +5,8 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     a.setApplicationName( "QarkDown" );
-    a.setApplicationVersion( "1.0.0" );
-    a.setOrganizationDomain( "com.github/pasnox/qarkdown" );
+    a.setApplicationVersion( "1.0.1" );
+    a.setOrganizationDomain( "com.github/sschober/qarkdown" );
     a.setOrganizationName( a.applicationName() );
     a.setWindowIcon( QIcon( ":/icons/application.png" ) );
 

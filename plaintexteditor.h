@@ -3,6 +3,11 @@
 
 #include <QPlainTextEdit>
 
+/**
+ * @brief The PlainTextEditor class
+ *
+ * A custom editor, that adds indentation to the standad Qt widget.
+ */
 class PlainTextEditor : public QPlainTextEdit
 {
     Q_OBJECT

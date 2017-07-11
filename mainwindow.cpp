@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "ui_settings.h"
 #include "highlighter.h"
 
 #include <html.h>
@@ -27,6 +28,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     statusBar()->addPermanentWidget( renderLabel );
 
+    readUserSettings();
+    readProjectSettings();
+
     QComboBox* headerComboBox = new QComboBox( this );
 
     for ( int i = 1; i <= 6; i++ ) {
@@ -37,16 +41,16 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->toolBar->insertWidget( separator, headerComboBox );
 
     // Set font
-    QFont font;
-    font.setFamily("Courier");
-    font.setFixedPitch(true);
-    font.setPointSize(font.pointSize() +5);
-    ui->plainTextEdit->setFont(font);
+    currentFont = new QFont();
+    currentFont->setFamily("Courier");
+    currentFont->setFixedPitch(true);
+    currentFont->setPointSize(currentFont->pointSize() +5);
+    qDebug() << "editor font size: " << currentFont->pointSize();
+    ui->plainTextEdit->setFont(*currentFont);
 
     const float targetWidth = 67.0;
     // set plaintextedit to 80 character column width
-    int columnWidth = round( QFontMetrics(font).averageCharWidth() * targetWidth)
-           // + ui->plainTextEdit->contentOffset().x()
+    int columnWidth = round( QFontMetrics(*currentFont).averageCharWidth() * targetWidth)
             + ui->plainTextEdit->document()->documentMargin();
     ui->plainTextEdit->setFixedWidth(columnWidth);
 
@@ -58,6 +62,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->actionSource->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_U));
     ui->actionDirectory->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_D));
     ui->actionExport_HTML->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_E));
+    ui->actionSettings->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Comma));
+    ui->actionProjectSettings->setEnabled(false);
 
     connect(ui->plainTextEdit, SIGNAL(textChanged()),this, SLOT(textChanged()));
     connect(ui->actionNew, SIGNAL(triggered()), this, SLOT(fileNew()));
@@ -81,9 +87,13 @@ MainWindow::MainWindow(QWidget *parent) :
         // a file was given on the command line
         openFile(qApp->arguments().at(1));
     }
+    else if(NULL != currentFile){
+      openFile(currentFile->fileName());
+    }
     else {
         fileNew();
     }
+
 }
 
 void MainWindow::fileNew(){
@@ -119,6 +129,8 @@ void MainWindow::aboutQt()
 
 void MainWindow::closeEvent( QCloseEvent* event )
 {
+    writeUserSettings();
+
     if ( NULL != currentFile ) {
         fileSave();
     }
@@ -272,6 +284,17 @@ void MainWindow::fileSaveAs(){
     }
 }
 
+void MainWindow::on_actionSettings_triggered(){
+  QDialog *settingsDialog = new QDialog();
+  Ui::SettingsDialog settingsUi;
+  settingsUi.setupUi(settingsDialog);
+  settingsUi.fontComboBox->setFontFilters(QFontComboBox::MonospacedFonts);
+  settingsUi.fontComboBox->setCurrentFont(*currentFont);
+  settingsUi.fontSize->setValue(currentFont->pointSize());
+  settingsDialog->exec();
+  reopenLastFile = settingsUi.reopenLastFile->isEnabled();
+}
+
 static QString markdown(QString in){
 
     if(in.size() > 0){
@@ -300,23 +323,43 @@ static QString markdown(QString in){
     return "";
 }
 
-static QString wrapInHTMLDoc(QString in){
-    QString result(in
-            .prepend("<html>\n <head>\n <meta charset=\"utf-8\">\n  <link type=\"text/css\" rel=\"stylesheet\" href=\"qrc:///css/bootstrap.css\"/>\n </head>\n <body>\n")
-            .append("\n </body>\n</html>"));
-//    qDebug() << result.toStdString().c_str();
-    return result;
+QString MainWindow::wrapInHTML(QString in){
+  QString charset("<meta charset=\"utf-8\">");
+
+  QString stylesheetPath("qrc:///css/bootstrap.css");
+  QString stylesheet;
+  if(NULL != projectSettings && NULL != currentFile && projectSettings->contains("stylesheet")){
+    // project path + configured css path
+    stylesheetPath = QFileInfo(currentFile->fileName()).dir().path() + "/" + projectSettings->value("stylesheet").toString();
+    QFile stylesheetFile(stylesheetPath);
+    stylesheetFile.open(QFile::ReadOnly);
+    stylesheet = QString("<style>\n%1\n</style>").arg(QString(stylesheetFile.readAll()));
+  }
+  else {
+    stylesheet = QString("<link type=\"text/css\" rel=\"stylesheet\" href=\"%1\"/>").arg(stylesheetPath);
+  }
+
+  QString header = QString("%1\n\t\t\t%2").arg(charset).arg(stylesheet);
+
+  QString body = in;
+
+  QString result = QString("<html>\n\t<head>\n\t\t%1\n\t</head>\n\t<body><div class=\"content\">\n\t\t%2\n\t</div></body>\n</html>").arg(header).arg(body);
+
+  qDebug() << result.toStdString().c_str();
+
+  return result;
 }
 
 void MainWindow::textChanged(){
     QTime t;
     t.start();
     QString newText = markdown(ui->plainTextEdit->toPlainText());
-    QString newHTML = wrapInHTMLDoc(newText);
+    QString newHTML = wrapInHTML(newText);
     renderLabel->setText(QString("Render time: %1 ms").arg(t.elapsed()));
 
     // store scrollposition of webengine view before updating contents
     QPointF pos = ui->hswv->page()->scrollPosition();
+    qDebug() << "scroll pos: " << pos;
 
     ui->hswv->page()->setHtml(newHTML);
     ui->sourceView->setPlainText(newText);
@@ -324,8 +367,11 @@ void MainWindow::textChanged(){
     // restore focus to pte, as of some new version of Qt it seems to be lost during updating the other views
     ui->plainTextEdit->setFocus();
 
-    // restore scrollposition via javascrip
-    ui->hswv->page()->runJavaScript(QString("window.scrollTo(%1, %2);").arg(pos.x()).arg(pos.y()));
+    // Scroll to the bottom
+    QString jsScrollScript("if( typeof(document.body) != 'undefined') { window.scrollTo(0,document.body.scrollHeight); };");
+    // restore scrollposition via javascript
+//    QString jsScrollScript("window.scrollTo(%1, %2)");
+    ui->hswv->page()->runJavaScript(jsScrollScript);//.arg(pos.x()).arg(pos.y()));
 }
 
 void MainWindow::on_actionBold_triggered()
@@ -427,4 +473,49 @@ void MainWindow::headerComboBox_activated( int index )
     }
 
     replaceSelectedTextBy( QString( "%1 %2" ).arg( header ).arg( text ) );
+}
+
+void MainWindow::readUserSettings(){
+  userSettings = new QSettings("SSSM", "QarkDown");
+  userSettings->beginGroup("MainWindow");
+  if(userSettings->value("saveGeometry", false).toBool()){
+    resize(userSettings->value("size",QSize(400,400)).toSize());
+    move(userSettings->value("pos", QPoint(200,200)).toPoint());
+  }
+  if(userSettings->value("reopenLastFile", false).toBool()){
+    reopenLastFile = true;
+    currentFile = new QFile(userSettings->value("lastFile").toString());
+  }
+  userSettings->endGroup();
+}
+
+void MainWindow::writeUserSettings(){
+  userSettings->beginGroup("MainWindow");
+
+  if(reopenLastFile){
+    if(NULL != currentFile){
+      userSettings->setValue("reopenLastFile", true);
+      userSettings->setValue("lastFile",windowFilePath());
+    }
+  }
+  userSettings->endGroup();
+  userSettings->sync();
+}
+
+void MainWindow::readProjectSettings(){
+  if(NULL != currentFile){
+    QString path(QFileInfo(currentFile->fileName()).dir().path());
+    if(QFileInfo(path + "/.qarkdownrc").exists()){
+      qDebug() << "found project file under path: " << path;
+      ui->actionMake_directory_a_project->setEnabled(false);
+      ui->actionProjectSettings->setEnabled(true);
+      // TODO: load project specific settings
+      projectSettings = new QSettings(path + "/.qarkdownrc", QSettings::IniFormat);
+    }
+    else{
+      qDebug() << "found no project file under path: " << path;
+      ui->actionMake_directory_a_project->setEnabled(true);
+      ui->actionProjectSettings->setEnabled(false);
+    }
+  }
 }
