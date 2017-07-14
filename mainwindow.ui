@@ -293,13 +293,8 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>QWebView</class>
-   <extends>QWidget</extends>
-   <header>QtWebKit/QWebView</header>
-  </customwidget>
-  <customwidget>
    <class>HScrollWebView</class>
-   <extends>QWebView</extends>
+   <extends>QWidget</extends>
    <header>hscrollwebview.h</header>
   </customwidget>
   <customwidget>

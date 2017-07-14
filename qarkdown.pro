@@ -25,8 +25,8 @@ SOURCES *= main.cpp \
 
 OTHER_FILES *= README.md
 
-exists( hoedown ) {
-    include( hoedown.pri )
+exists( hoextdown ) {
+    include( hoextdown.pri )
 } else {
-    LIBS *= -lhoedown
+    LIBS *= -lhoextdown
 }

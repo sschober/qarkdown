@@ -1,3 +1,6 @@
 [submodule "hoedown"]
 	path = hoedown
 	url = https://github.com/hoedown/hoedown.git
+[submodule "hoextdown"]
+	path = hoextdown
+	url = https://github.com/kjdev/hoextdown.git

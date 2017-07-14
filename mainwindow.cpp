@@ -304,8 +304,8 @@ static QString markdown(QString in){
         if(0 < qba.size()){
             hoedown_renderer *renderer = hoedown_html_renderer_new((hoedown_html_flags)NULL,16);
             // TODO: investigate further extensions
-            unsigned int extensions = HOEDOWN_EXT_FOOTNOTES;
-            hoedown_document *document = hoedown_document_new(renderer, (hoedown_extensions)extensions, 16);
+            unsigned int extensions = HOEDOWN_EXT_FOOTNOTES | HOEDOWN_EXT_SPECIAL_ATTRIBUTE;
+            hoedown_document *document = hoedown_document_new(renderer, (hoedown_extensions)extensions, 16, 0, NULL, NULL);
             hoedown_buffer *in_buf = hoedown_buffer_new(qba.size());
             hoedown_buffer_puts(in_buf, txt);
             hoedown_buffer *html = hoedown_buffer_new(64);
