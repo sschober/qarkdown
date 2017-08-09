@@ -67,7 +67,11 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->actionSettings->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Comma));
   ui->actionProjectSettings->setEnabled(false);
 
+  // when text changes in the plaintexteditor, we update the web view
   connect(ui->plainTextEdit, SIGNAL(textChanged()),this, SLOT(textChanged()));
+  // when the cursor position changes, we update the web view
+  connect(ui->plainTextEdit, SIGNAL(cursorPositionChanged()), this, SLOT(textChanged()));
+
   connect(ui->actionNew, SIGNAL(triggered()), this, SLOT(fileNew()));
   connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(fileOpen()));
   connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(fileSave()));
@@ -250,6 +254,7 @@ void MainWindow::fileSave(){
     QTextStream out(currentFile);
     out << ui->plainTextEdit->toPlainText();
     currentFile->close();
+    currentFileLastRead = QDateTime::currentDateTime();
   }
   ui->plainTextEdit->document()->setModified( false );
   updateListView();
@@ -369,27 +374,20 @@ QString MainWindow::wrapInHTML(QString in){
 void MainWindow::textChanged(){
   QTime t;
   t.start();
-  QString newText = markdown(ui->plainTextEdit->toPlainText());
+  QString editorText(ui->plainTextEdit->toPlainText());
+  editorText.insert(ui->plainTextEdit->textCursor().position(), QString::fromUtf8("<span id=\"qdCursor\">\u2663</span>"));
+  QString newText = markdown(editorText);
   QString newHTML = wrapInHTML(newText);
   renderLabel->setText(QString("Render time: %1 ms").arg(t.elapsed()));
-
-  // store scrollposition of webengine view before updating contents
-  QPointF pos = ui->hswv->page()->scrollPosition();
-  qDebug() << "scroll pos: " << pos;
 
   ui->hswv->page()->setHtml(newHTML);
   ui->sourceView->setPlainText(newText);
 
   // restore focus to pte, as of some new version of Qt it seems to be lost during updating the other views
   ui->plainTextEdit->setFocus();
-
-  // Scroll to the bottom
-  QString jsScrollScript("if( typeof(document.body) != 'undefined') { window.scrollTo(0,document.body.scrollHeight); };");
-  // restore scrollposition via javascript
-  //    QString jsScrollScript("window.scrollTo(%1, %2)");
-  ui->hswv->page()->runJavaScript(jsScrollScript);//.arg(pos.x()).arg(pos.y()));
   ui->hswv->page()->settings()->setAttribute(QWebEngineSettings::LocalContentCanAccessFileUrls,true);
 }
+
 
 void MainWindow::on_actionBold_triggered()
 {

@@ -11,154 +11,168 @@
 #define TabSize 4
 
 PlainTextEditor::PlainTextEditor( QWidget* parent )
-    : QPlainTextEdit( parent )
+  : QPlainTextEdit( parent )
 {
-    setTabStopWidth( 40 );
-    setTabChangesFocus( false );
-    setAcceptDrops(true);
+  setTabStopWidth( 40 );
+  setTabChangesFocus( false );
+  setAcceptDrops(true);
 }
 
 #include <QDebug>
 
 bool PlainTextEditor::event( QEvent* event )
 {
-    if ( event->type() == QEvent::KeyPress ) {
-        QKeyEvent* ke = static_cast<QKeyEvent*>( event );
-        const bool isBackTab =
-                ( ke->key() == Qt::Key_Backtab && ( ke->modifiers() == Qt::NoModifier || ke->modifiers() == Qt::ShiftModifier ) ) ||
-                ( ke->key() == Qt::Key_Tab && ke->modifiers() == Qt::ShiftModifier )
+  if ( event->type() == QEvent::KeyPress ) {
+    QKeyEvent* ke = static_cast<QKeyEvent*>( event );
+    const bool isBackTab =
+        ( ke->key() == Qt::Key_Backtab && ( ke->modifiers() == Qt::NoModifier || ke->modifiers() == Qt::ShiftModifier ) ) ||
+        ( ke->key() == Qt::Key_Tab && ke->modifiers() == Qt::ShiftModifier )
         ;
-        const bool isTab = ke->key() == Qt::Key_Tab && ke->modifiers() == Qt::NoModifier;
+    const bool isTab = ke->key() == Qt::Key_Tab && ke->modifiers() == Qt::NoModifier;
 
-        if ( isTab ) {
-            onTabKey( ke );
-            return true;
-        }
-        else if ( isBackTab ) {
-            onShiftTabKey( ke );
-            return true;
-        }
+    const bool isSideNoteShortCut = Qt::Key_S == ke->key() &&
+                                    Qt::ShiftModifier & ke->modifiers() &&
+                                    Qt::AltModifier & ke->modifiers();
+
+    if ( isTab ) {
+      onTabKey( ke );
+      return true;
     }
+    else if ( isBackTab ) {
+      onShiftTabKey( ke );
+      return true;
+    }
+    else if(isSideNoteShortCut){
+      onSideNoteShortCut(ke);
+      return true;
+    }
+  }
 
-    return QPlainTextEdit::event( event );
+  return QPlainTextEdit::event( event );
+}
+
+void PlainTextEditor::onSideNoteShortCut(QKeyEvent *event){
+  Q_UNUSED(event);
+
+  textCursor().insertText("{@paragraph .sidenote}");
 }
 
 void PlainTextEditor::onTabKey( QKeyEvent* event )
 {
-    Q_UNUSED( event );
+  Q_UNUSED( event );
 
-    if ( !textCursor().hasSelection() ) {
-        textCursor().insertText( QString( IndentSize, QLatin1Char( ' ' ) ) );
-    }
-    else {
-        indentOrUnindent( true );
-    }
+  if ( !textCursor().hasSelection() ) {
+    textCursor().insertText( QString( IndentSize, QLatin1Char( ' ' ) ) );
+  }
+  else {
+    indentOrUnindent( true );
+  }
 }
 
 void PlainTextEditor::onShiftTabKey( QKeyEvent* event )
 {
-    Q_UNUSED( event );
+  Q_UNUSED( event );
 
-    if ( !textCursor().hasSelection() ) {
-        QTextCursor cursor = textCursor();
-        int newPos = cursor.position() -IndentSize;
+  if ( !textCursor().hasSelection() ) {
+    QTextCursor cursor = textCursor();
+    int newPos = cursor.position() -IndentSize;
 
-        if ( newPos < 0 ) {
-            newPos = 0;
-        }
-
-        cursor.setPosition( newPos );
-        setTextCursor( cursor );
+    if ( newPos < 0 ) {
+      newPos = 0;
     }
-    else {
-        indentOrUnindent( false );
-    }
+
+    cursor.setPosition( newPos );
+    setTextCursor( cursor );
+  }
+  else {
+    indentOrUnindent( false );
+  }
 }
 
 void PlainTextEditor::indentOrUnindent( bool doIndent )
 {
-    QTextCursor cursor = textCursor();
-    cursor.beginEditBlock();
+  QTextCursor cursor = textCursor();
+  cursor.beginEditBlock();
 
-    // Indent or unindent the selected lines
-    int pos = cursor.position();
-    int anchor = cursor.anchor();
-    int start = qMin( anchor, pos );
-    int end = qMax( anchor, pos );
+  // Indent or unindent the selected lines
+  int pos = cursor.position();
+  int anchor = cursor.anchor();
+  int start = qMin( anchor, pos );
+  int end = qMax( anchor, pos );
 
-    QTextDocument* doc = document();
-    QTextBlock startBlock = doc->findBlock(start);
-    QTextBlock endBlock = doc->findBlock( end -1 ).next();
+  QTextDocument* doc = document();
+  QTextBlock startBlock = doc->findBlock(start);
+  QTextBlock endBlock = doc->findBlock( end -1 ).next();
 
-    for ( QTextBlock block = startBlock; block != endBlock; block = block.next() ) {
-        QString text = block.text();
+  for ( QTextBlock block = startBlock; block != endBlock; block = block.next() ) {
+    QString text = block.text();
 
-        if ( doIndent ) {
-            const int indentPosition = firstNonSpace( text );
-            cursor.setPosition( block.position() +indentPosition );
-            cursor.insertText( QString( IndentSize, QLatin1Char( ' ' ) ) );
-        } else {
-            const int indentPosition = firstNonSpace( text );
-            const int targetColumn = indentedColumn( columnAt( text, indentPosition ), false );
-            cursor.setPosition( block.position() +indentPosition );
-            cursor.setPosition( block.position() +targetColumn, QTextCursor::KeepAnchor );
-            cursor.removeSelectedText();
-        }
+    if ( doIndent ) {
+      const int indentPosition = firstNonSpace( text );
+      cursor.setPosition( block.position() +indentPosition );
+      cursor.insertText( QString( IndentSize, QLatin1Char( ' ' ) ) );
+    } else {
+      const int indentPosition = firstNonSpace( text );
+      const int targetColumn = indentedColumn( columnAt( text, indentPosition ), false );
+      cursor.setPosition( block.position() +indentPosition );
+      cursor.setPosition( block.position() +targetColumn, QTextCursor::KeepAnchor );
+      cursor.removeSelectedText();
     }
+  }
 
-    // Reselect the selected lines
-    cursor.setPosition( startBlock.position() );
-    cursor.setPosition( endBlock.previous().position(), QTextCursor::KeepAnchor );
-    cursor.movePosition( QTextCursor::EndOfBlock, QTextCursor::KeepAnchor );
+  // Reselect the selected lines
+  cursor.setPosition( startBlock.position() );
+  cursor.setPosition( endBlock.previous().position(), QTextCursor::KeepAnchor );
+  cursor.movePosition( QTextCursor::EndOfBlock, QTextCursor::KeepAnchor );
 
-    cursor.endEditBlock();
-    setTextCursor( cursor );
+  cursor.endEditBlock();
+  setTextCursor( cursor );
 }
 
 int PlainTextEditor::firstNonSpace( const QString& text ) const
 {
-    int i = 0;
+  int i = 0;
 
-    while ( i < text.size() ) {
-        if ( !text.at( i ).isSpace() ) {
-            return i;
-        }
-
-        ++i;
+  while ( i < text.size() ) {
+    if ( !text.at( i ).isSpace() ) {
+      return i;
     }
 
-    return i;
+    ++i;
+  }
+
+  return i;
 }
 
 int PlainTextEditor::columnAt( const QString& text, int position ) const
 {
-    int column = 0;
+  int column = 0;
 
-    for ( int i = 0; i < position; ++i ) {
-        if ( text.at( i ) == QLatin1Char( '\t' ) ) {
-            column = column -( column %TabSize ) +TabSize;
-        }
-        else {
-            ++column;
-        }
+  for ( int i = 0; i < position; ++i ) {
+    if ( text.at( i ) == QLatin1Char( '\t' ) ) {
+      column = column -( column %TabSize ) +TabSize;
     }
+    else {
+      ++column;
+    }
+  }
 
-    return column;
+  return column;
 }
 
 int PlainTextEditor::indentedColumn( int column, bool doIndent ) const
 {
-    const int aligned = ( column /IndentSize ) *IndentSize;
+  const int aligned = ( column /IndentSize ) *IndentSize;
 
-    if ( doIndent ) {
-        return aligned +IndentSize;
-    }
+  if ( doIndent ) {
+    return aligned +IndentSize;
+  }
 
-    if ( aligned < column ) {
-        return aligned;
-    }
+  if ( aligned < column ) {
+    return aligned;
+  }
 
-    return qMax( 0, aligned -IndentSize );
+  return qMax( 0, aligned -IndentSize );
 }
 
 void PlainTextEditor::dragEnterEvent(QDragEnterEvent *event){

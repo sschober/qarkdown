@@ -32,6 +32,7 @@ protected:
 private:
     void onTabKey( QKeyEvent* event );
     void onShiftTabKey(QKeyEvent* event );
+    void onSideNoteShortCut(QKeyEvent* event);
     int firstNonSpace( const QString& text ) const;
     int columnAt( const QString& text, int position ) const;
     int indentedColumn( int column, bool doIndent ) const;
