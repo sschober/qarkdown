@@ -20,6 +20,15 @@ public:
 public slots:
     void indentOrUnindent( bool doIndent );
 
+signals:
+    void imageDropped(QString path);
+
+protected:
+    void dragEnterEvent(QDragEnterEvent *event);
+    void dragMoveEvent(QDragMoveEvent *event);
+    void dragLeaveEvent(QDragLeaveEvent *event);
+    void dropEvent(QDropEvent *event);
+
 private:
     void onTabKey( QKeyEvent* event );
     void onShiftTabKey(QKeyEvent* event );

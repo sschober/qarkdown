@@ -15,6 +15,7 @@ PlainTextEditor::PlainTextEditor( QWidget* parent )
 {
     setTabStopWidth( 40 );
     setTabChangesFocus( false );
+    setAcceptDrops(true);
 }
 
 #include <QDebug>
@@ -159,3 +160,48 @@ int PlainTextEditor::indentedColumn( int column, bool doIndent ) const
 
     return qMax( 0, aligned -IndentSize );
 }
+
+void PlainTextEditor::dragEnterEvent(QDragEnterEvent *event){
+  qDebug() << "drop enter event with mime data: " << event->mimeData()->text();
+  event->acceptProposedAction();
+}
+
+void PlainTextEditor::dragMoveEvent(QDragMoveEvent *event){
+  event->acceptProposedAction();
+}
+
+void PlainTextEditor::dropEvent(QDropEvent *event){
+
+  const QMimeData *mimeData = event->mimeData();
+
+  qDebug() << "drop event: " << mimeData->formats();
+
+  if(mimeData->hasImage()){
+    qDebug() << "drop event containing image (" << mimeData << "). trying to embedd...";
+  }
+  if(mimeData->hasText()){
+    qDebug() << "text: " << mimeData->text();
+  }
+  if(mimeData->hasHtml()){
+    qDebug() << "html: " << mimeData->html();
+  }
+  if(mimeData->hasUrls()){
+    QList<QUrl> urlList = mimeData->urls();
+
+    qDebug() << "urls: " << urlList;
+
+    if(1 < urlList.size()){
+      qWarning() << " list size " << urlList.size() << " larger thant 1. using only first URL.";
+    }
+
+    emit imageDropped(urlList.at(0).toLocalFile());
+  }
+
+  event->acceptProposedAction();
+}
+
+void PlainTextEditor::dragLeaveEvent(QDragLeaveEvent *event){
+  qDebug() << "drag leave";
+  event->accept();
+}
+
