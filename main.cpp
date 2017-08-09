@@ -4,6 +4,7 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+
     a.setApplicationName( "QarkDown" );
     a.setApplicationVersion( "1.0.1" );
     a.setOrganizationDomain( "com.github/sschober/qarkdown" );
@@ -14,5 +15,6 @@ int main(int argc, char *argv[])
     w.showMaximized();
 
     QObject::connect(&a, SIGNAL( lastWindowClosed() ), &a, SLOT( quit() ) );
+
     return a.exec();
 }
