@@ -21,6 +21,7 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = 0);
+    void openFile(QString fileName);
     ~MainWindow();
 
 public slots:
@@ -50,9 +51,9 @@ private slots:
     void headerComboBox_activated( int index );
     void on_actionSettings_triggered();
     //TODO: void on_actionProjectSettings_triggerd(); - should be analogous to on_actionSettings_triggered()
+    void imageDropped(QString path);
 
 private:
-    void openFile(QString fileName);
     void updateListView();
     QString selectedText();
     void replaceSelectedTextBy( const QString& text );
@@ -64,6 +65,7 @@ private:
 
     Ui::MainWindow *ui;
     QPointer<QFile> currentFile;
+    QDateTime currentFileLastRead;
     QLabel* renderLabel;
     QFont* currentFont;
     bool reopenLastFile = false;

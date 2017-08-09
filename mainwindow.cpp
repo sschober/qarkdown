@@ -16,6 +16,7 @@
 #include <QComboBox>
 #include <QTextDocument>
 #include <QInputDialog>
+#include <QWebEngineSettings>
 
 #include <cmath> // for round
 
@@ -23,7 +24,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     currentFile(NULL),
-    renderLabel(new QLabel)
+    renderLabel(new QLabel),
+    projectSettings(NULL)
 {
     ui->setupUi(this);
     statusBar()->addPermanentWidget( renderLabel );
@@ -79,6 +81,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect( ui->actionAbout_Qt, SIGNAL( triggered() ), this, SLOT( aboutQt() ) );
     connect( headerComboBox, SIGNAL( activated( int ) ), this, SLOT( headerComboBox_activated( int ) ) );
 
+    connect( ui->plainTextEdit, SIGNAL(imageDropped(QString)), this, SLOT(imageDropped(QString)));
     ui->sourceView->hide();
 
     ui->listView->hide();
@@ -94,6 +97,7 @@ MainWindow::MainWindow(QWidget *parent) :
         fileNew();
     }
 
+    QWebEngineSettings::defaultSettings()->setAttribute(QWebEngineSettings::LocalContentCanAccessFileUrls, true);
 }
 
 void MainWindow::fileNew(){
@@ -180,6 +184,8 @@ void MainWindow::openFile(QString fileName){
             if(! line.isNull() )
                 fileContent.append(line).append('\n');
         }
+        currentFileLastRead = QDateTime::currentDateTime();
+        qDebug() << "read " << fileName << " at " << currentFileLastRead.toString();
         currentFile->close();
         ui->plainTextEdit->setPlainText(fileContent);
         setWindowFilePath(fileName);
@@ -226,15 +232,25 @@ void MainWindow::fileSave(){
     if(NULL == currentFile){
         QString newFileName = QFileDialog::getSaveFileName();
         currentFile = new QFile(newFileName);
+        currentFileLastRead = QDateTime::currentDateTime();
+        qDebug() << "read " << newFileName << " at " << currentFileLastRead.toString();
         setWindowFilePath(newFileName);
     }
-    if (!currentFile->open(QIODevice::WriteOnly | QIODevice::Text)) {
-        delete currentFile;
-        return;
+    QFileInfo qfi(*currentFile);
+    QMessageBox::StandardButton reply = QMessageBox::Yes;
+    if(qfi.lastModified() > currentFileLastRead){
+      qDebug() << "emitting warning: " << qfi.lastModified().toString() << " > " << currentFileLastRead.toString();
+      reply = QMessageBox::question(this, "File changed on disk", "The file which is currently displayed in the editor has changed on disk, since it was last read. Do you want to save the contents of the editor, thus overwriting the changes on disk?", QMessageBox::Yes|QMessageBox::No);
     }
-    QTextStream out(currentFile);
-    out << ui->plainTextEdit->toPlainText();
-    currentFile->close();
+    if( QMessageBox::Yes == reply){
+      if (!currentFile->open(QIODevice::WriteOnly | QIODevice::Text)) {
+          delete currentFile;
+          return;
+      }
+      QTextStream out(currentFile);
+      out << ui->plainTextEdit->toPlainText();
+      currentFile->close();
+    }
     ui->plainTextEdit->document()->setModified( false );
     updateListView();
     statusBar()->showMessage( tr( "%1 has been saved" ).arg( currentFile->fileName() ) );
@@ -345,7 +361,7 @@ QString MainWindow::wrapInHTML(QString in){
 
   QString result = QString("<html>\n\t<head>\n\t\t%1\n\t</head>\n\t<body><div class=\"content\">\n\t\t%2\n\t</div></body>\n</html>").arg(header).arg(body);
 
-  qDebug() << result.toStdString().c_str();
+  //qDebug() << result.toStdString().c_str();
 
   return result;
 }
@@ -372,6 +388,7 @@ void MainWindow::textChanged(){
     // restore scrollposition via javascript
 //    QString jsScrollScript("window.scrollTo(%1, %2)");
     ui->hswv->page()->runJavaScript(jsScrollScript);//.arg(pos.x()).arg(pos.y()));
+    ui->hswv->page()->settings()->setAttribute(QWebEngineSettings::LocalContentCanAccessFileUrls,true);
 }
 
 void MainWindow::on_actionBold_triggered()
@@ -516,6 +533,34 @@ void MainWindow::readProjectSettings(){
       qDebug() << "found no project file under path: " << path;
       ui->actionMake_directory_a_project->setEnabled(true);
       ui->actionProjectSettings->setEnabled(false);
+      projectSettings = NULL;
     }
   }
+}
+
+void MainWindow::imageDropped(QString path){
+  qDebug() << "image dropped:  " << path;
+
+  QFile imageFile(path);
+
+  QString imageDirPath(currentFile->fileName() + ".img");
+
+  QDir imageDir(imageDirPath);
+
+  if(!imageDir.exists()){
+    QDir projectDir(QFileInfo(currentFile->fileName()).dir());
+    if(!projectDir.mkdir(currentFile->fileName() + ".img")){
+      qWarning() << " error creating dir: " << currentFile->fileName() << ".img";
+      return;
+    }
+  }
+
+  QString targetPath(imageDirPath + "/" + QFileInfo(imageFile).fileName());
+  qDebug() << "copy image to:  " << targetPath;
+  if(! QFile::copy(path, targetPath)){
+    qWarning() << " error copying file: ";
+    return;
+  }
+
+   ui->plainTextEdit->insertPlainText(QString("![](file://%1)").arg(targetPath));
 }
