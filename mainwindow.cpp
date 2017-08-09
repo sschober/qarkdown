@@ -21,283 +21,283 @@
 #include <cmath> // for round
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    currentFile(NULL),
-    renderLabel(new QLabel),
-    projectSettings(NULL)
+  QMainWindow(parent),
+  ui(new Ui::MainWindow),
+  currentFile(NULL),
+  renderLabel(new QLabel),
+  projectSettings(NULL)
 {
-    ui->setupUi(this);
-    statusBar()->addPermanentWidget( renderLabel );
+  ui->setupUi(this);
+  statusBar()->addPermanentWidget( renderLabel );
 
-    readUserSettings();
-    readProjectSettings();
+  readUserSettings();
+  readProjectSettings();
 
-    QComboBox* headerComboBox = new QComboBox( this );
+  QComboBox* headerComboBox = new QComboBox( this );
 
-    for ( int i = 1; i <= 6; i++ ) {
-        headerComboBox->addItem( QString( "H%1" ).arg( i ), i );
-    }
+  for ( int i = 1; i <= 6; i++ ) {
+    headerComboBox->addItem( QString( "H%1" ).arg( i ), i );
+  }
 
-    QAction* separator = ui->toolBar->insertSeparator( ui->actionBold );
-    ui->toolBar->insertWidget( separator, headerComboBox );
+  QAction* separator = ui->toolBar->insertSeparator( ui->actionBold );
+  ui->toolBar->insertWidget( separator, headerComboBox );
 
-    // Set font
-    currentFont = new QFont();
-    currentFont->setFamily("Courier");
-    currentFont->setFixedPitch(true);
-    currentFont->setPointSize(currentFont->pointSize() +5);
-    qDebug() << "editor font size: " << currentFont->pointSize();
-    ui->plainTextEdit->setFont(*currentFont);
+  // Set font
+  currentFont = new QFont();
+  currentFont->setFamily("Courier");
+  currentFont->setFixedPitch(true);
+  currentFont->setPointSize(currentFont->pointSize() +5);
+  qDebug() << "editor font size: " << currentFont->pointSize();
+  ui->plainTextEdit->setFont(*currentFont);
 
-    const float targetWidth = 67.0;
-    // set plaintextedit to 80 character column width
-    int columnWidth = round( QFontMetrics(*currentFont).averageCharWidth() * targetWidth)
-            + ui->plainTextEdit->document()->documentMargin();
-    ui->plainTextEdit->setFixedWidth(columnWidth);
+  const float targetWidth = 67.0;
+  // set plaintextedit to 80 character column width
+  int columnWidth = round( QFontMetrics(*currentFont).averageCharWidth() * targetWidth)
+                    + ui->plainTextEdit->document()->documentMargin();
+  ui->plainTextEdit->setFixedWidth(columnWidth);
 
-    new HGMarkdownHighlighter(ui->plainTextEdit->document(), 1000);
+  new HGMarkdownHighlighter(ui->plainTextEdit->document(), 1000);
 
-    ui->actionNew->setShortcut(QKeySequence::New);
-    ui->actionOpen->setShortcut(QKeySequence::Open);
-    ui->actionSave->setShortcut(QKeySequence::Save);
-    ui->actionSource->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_U));
-    ui->actionDirectory->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_D));
-    ui->actionExport_HTML->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_E));
-    ui->actionSettings->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Comma));
-    ui->actionProjectSettings->setEnabled(false);
+  ui->actionNew->setShortcut(QKeySequence::New);
+  ui->actionOpen->setShortcut(QKeySequence::Open);
+  ui->actionSave->setShortcut(QKeySequence::Save);
+  ui->actionSource->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_U));
+  ui->actionDirectory->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_D));
+  ui->actionExport_HTML->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_E));
+  ui->actionSettings->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Comma));
+  ui->actionProjectSettings->setEnabled(false);
 
-    connect(ui->plainTextEdit, SIGNAL(textChanged()),this, SLOT(textChanged()));
-    connect(ui->actionNew, SIGNAL(triggered()), this, SLOT(fileNew()));
-    connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(fileOpen()));
-    connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(fileSave()));
-    connect(ui->actionExport_HTML, SIGNAL(triggered()), this, SLOT(fileSaveHTML()));
-    connect(ui->actionSave_As, SIGNAL(triggered()), this, SLOT(fileSaveAs()));
-    connect(ui->actionSource, SIGNAL(triggered()),this,SLOT(viewSource()));
-    connect(ui->actionDirectory, SIGNAL(triggered()),this,SLOT(viewDirectory()));
-    connect(ui->listView, SIGNAL(clicked(QModelIndex)), this, SLOT(dirViewClicked(QModelIndex)));
-    connect( ui->plainTextEdit, SIGNAL( modificationChanged( bool ) ), this, SLOT( setWindowModified( bool ) ) );
-    connect( ui->actionAbout, SIGNAL( triggered() ), this, SLOT( about() ) );
-    connect( ui->actionAbout_Qt, SIGNAL( triggered() ), this, SLOT( aboutQt() ) );
-    connect( headerComboBox, SIGNAL( activated( int ) ), this, SLOT( headerComboBox_activated( int ) ) );
+  connect(ui->plainTextEdit, SIGNAL(textChanged()),this, SLOT(textChanged()));
+  connect(ui->actionNew, SIGNAL(triggered()), this, SLOT(fileNew()));
+  connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(fileOpen()));
+  connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(fileSave()));
+  connect(ui->actionExport_HTML, SIGNAL(triggered()), this, SLOT(fileSaveHTML()));
+  connect(ui->actionSave_As, SIGNAL(triggered()), this, SLOT(fileSaveAs()));
+  connect(ui->actionSource, SIGNAL(triggered()),this,SLOT(viewSource()));
+  connect(ui->actionDirectory, SIGNAL(triggered()),this,SLOT(viewDirectory()));
+  connect(ui->listView, SIGNAL(clicked(QModelIndex)), this, SLOT(dirViewClicked(QModelIndex)));
+  connect( ui->plainTextEdit, SIGNAL( modificationChanged( bool ) ), this, SLOT( setWindowModified( bool ) ) );
+  connect( ui->actionAbout, SIGNAL( triggered() ), this, SLOT( about() ) );
+  connect( ui->actionAbout_Qt, SIGNAL( triggered() ), this, SLOT( aboutQt() ) );
+  connect( headerComboBox, SIGNAL( activated( int ) ), this, SLOT( headerComboBox_activated( int ) ) );
 
-    connect( ui->plainTextEdit, SIGNAL(imageDropped(QString)), this, SLOT(imageDropped(QString)));
-    ui->sourceView->hide();
+  connect( ui->plainTextEdit, SIGNAL(imageDropped(QString)), this, SLOT(imageDropped(QString)));
+  ui->sourceView->hide();
 
-    ui->listView->hide();
+  ui->listView->hide();
 
-    if(qApp->arguments().size() > 1){
-        // a file was given on the command line
-        openFile(qApp->arguments().at(1));
-    }
-    else if(NULL != currentFile){
-      openFile(currentFile->fileName());
-    }
-    else {
-        fileNew();
-    }
+  if(qApp->arguments().size() > 1){
+    // a file was given on the command line
+    openFile(qApp->arguments().at(1));
+  }
+  else if(NULL != currentFile){
+    openFile(currentFile->fileName());
+  }
+  else {
+    fileNew();
+  }
 
-    QWebEngineSettings::defaultSettings()->setAttribute(QWebEngineSettings::LocalContentCanAccessFileUrls, true);
+  QWebEngineSettings::defaultSettings()->setAttribute(QWebEngineSettings::LocalContentCanAccessFileUrls, true);
 }
 
 void MainWindow::fileNew(){
-    if(NULL != currentFile){
-        fileSave();
-    }
-    delete currentFile;
-    ui->plainTextEdit->clear();
-    ui->plainTextEdit->document()->setModified( true );
-    ui->plainTextEdit->document()->setModified( false );
-    setWindowFilePath( tr( "[New File]" ) );
+  if(NULL != currentFile){
+    fileSave();
+  }
+  delete currentFile;
+  ui->plainTextEdit->clear();
+  ui->plainTextEdit->document()->setModified( true );
+  ui->plainTextEdit->document()->setModified( false );
+  setWindowFilePath( tr( "[New File]" ) );
 }
 
 void MainWindow::dirViewClicked(QModelIndex idx){
-    if(NULL != currentFile){
-        fileSave();
-    }
-    QFileSystemModel *model = (QFileSystemModel*) ui->listView->model();
+  if(NULL != currentFile){
+    fileSave();
+  }
+  QFileSystemModel *model = (QFileSystemModel*) ui->listView->model();
 
-    openFile(model->filePath(idx));
+  openFile(model->filePath(idx));
 
 }
 
 void MainWindow::about()
 {
-    QMessageBox::information( this, QString::null, tr( "%1 v%2" ).arg( qApp->applicationName() ).arg( qApp->applicationVersion() ) );
+  QMessageBox::information( this, QString::null, tr( "%1 v%2" ).arg( qApp->applicationName() ).arg( qApp->applicationVersion() ) );
 }
 
 void MainWindow::aboutQt()
 {
-    qApp->aboutQt();
+  qApp->aboutQt();
 }
 
 void MainWindow::closeEvent( QCloseEvent* event )
 {
-    writeUserSettings();
+  writeUserSettings();
 
-    if ( NULL != currentFile ) {
-        fileSave();
-    }
-    else if ( ui->plainTextEdit->document()->isModified() ) {
-        fileSaveAs();
-    }
+  if ( NULL != currentFile ) {
+    fileSave();
+  }
+  else if ( ui->plainTextEdit->document()->isModified() ) {
+    fileSaveAs();
+  }
 
-    QMainWindow::closeEvent( event );
+  QMainWindow::closeEvent( event );
 }
 
 void MainWindow::viewSource(){
-    if(ui->sourceView->isVisible()){
-        ui->sourceView->hide();
-    }
-    else{
-        ui->sourceView->show();
-    }
+  if(ui->sourceView->isVisible()){
+    ui->sourceView->hide();
+  }
+  else{
+    ui->sourceView->show();
+  }
 }
 
 void MainWindow::viewDirectory(){
-    if(!ui->listView->isVisible()){
-        ui->listView->show();
-    }
-    else{
-        ui->listView->hide();
-    }
+  if(!ui->listView->isVisible()){
+    ui->listView->show();
+  }
+  else{
+    ui->listView->hide();
+  }
 }
 
 MainWindow::~MainWindow()
 {
-    delete ui;
+  delete ui;
 }
 
 void MainWindow::openFile(QString fileName){
-    if(NULL != fileName){
-        delete currentFile;
-        currentFile = new QFile(fileName);
-        if (!currentFile->open(QIODevice::ReadWrite | QIODevice::Text)) {
-            delete currentFile;
-            return;
-        }
-        QString fileContent;
-        QTextStream in(currentFile);
-        QString line;
-        while(! in.atEnd()){
-            line = in.readLine();
-            if(! line.isNull() )
-                fileContent.append(line).append('\n');
-        }
-        currentFileLastRead = QDateTime::currentDateTime();
-        qDebug() << "read " << fileName << " at " << currentFileLastRead.toString();
-        currentFile->close();
-        ui->plainTextEdit->setPlainText(fileContent);
-        setWindowFilePath(fileName);
-        updateListView();
+  if(NULL != fileName){
+    delete currentFile;
+    currentFile = new QFile(fileName);
+    if (!currentFile->open(QIODevice::ReadWrite | QIODevice::Text)) {
+      delete currentFile;
+      return;
     }
+    QString fileContent;
+    QTextStream in(currentFile);
+    QString line;
+    while(! in.atEnd()){
+      line = in.readLine();
+      if(! line.isNull() )
+        fileContent.append(line).append('\n');
+    }
+    currentFileLastRead = QDateTime::currentDateTime();
+    qDebug() << "read " << fileName << " at " << currentFileLastRead.toString();
+    currentFile->close();
+    ui->plainTextEdit->setPlainText(fileContent);
+    setWindowFilePath(fileName);
+    updateListView();
+  }
 
 }
 
 void MainWindow::updateListView(){
-    QFileSystemModel *model = new QFileSystemModel;
-    QString path(QFileInfo(currentFile->fileName()).dir().path());
-    model->setFilter(QDir::AllDirs | QDir::AllEntries);
-    QStringList flt;
-    flt << "*.md" << "*.mkd";
-    model->setNameFilters(flt);
-    model->setNameFilterDisables(false);
-    model->setRootPath(path);
-    ui->listView->setModel(model);
-    ui->listView->setRootIndex(model->index(path));
+  QFileSystemModel *model = new QFileSystemModel;
+  QString path(QFileInfo(currentFile->fileName()).dir().path());
+  model->setFilter(QDir::AllDirs | QDir::AllEntries);
+  QStringList flt;
+  flt << "*.md" << "*.mkd";
+  model->setNameFilters(flt);
+  model->setNameFilterDisables(false);
+  model->setRootPath(path);
+  ui->listView->setModel(model);
+  ui->listView->setRootIndex(model->index(path));
 }
 
 QString MainWindow::selectedText()
 {
-    return ui->plainTextEdit->textCursor().selectedText();
+  return ui->plainTextEdit->textCursor().selectedText();
 }
 
 void MainWindow::replaceSelectedTextBy( const QString& text )
 {
-    QTextCursor cursor = ui->plainTextEdit->textCursor();
-    cursor.insertText( text );
-    ui->plainTextEdit->setTextCursor( cursor );
+  QTextCursor cursor = ui->plainTextEdit->textCursor();
+  cursor.insertText( text );
+  ui->plainTextEdit->setTextCursor( cursor );
 }
 
 void MainWindow::insertTextAtCursorPosition( const QString& text )
 {
-    replaceSelectedTextBy( text );
+  replaceSelectedTextBy( text );
 }
 
 void MainWindow::fileOpen(){
-    openFile(QFileDialog::getOpenFileName(this,tr("Open File"),"","*.md *.mkd"));
+  openFile(QFileDialog::getOpenFileName(this,tr("Open File"),"","*.md *.mkd"));
 }
 
 void MainWindow::fileSave(){
-    if(NULL == currentFile){
-        QString newFileName = QFileDialog::getSaveFileName();
-        currentFile = new QFile(newFileName);
-        currentFileLastRead = QDateTime::currentDateTime();
-        qDebug() << "read " << newFileName << " at " << currentFileLastRead.toString();
-        setWindowFilePath(newFileName);
+  if(NULL == currentFile){
+    QString newFileName = QFileDialog::getSaveFileName();
+    currentFile = new QFile(newFileName);
+    currentFileLastRead = QDateTime::currentDateTime();
+    qDebug() << "read " << newFileName << " at " << currentFileLastRead.toString();
+    setWindowFilePath(newFileName);
+  }
+  QFileInfo qfi(*currentFile);
+  QMessageBox::StandardButton reply = QMessageBox::Yes;
+  if(qfi.lastModified() > currentFileLastRead){
+    qDebug() << "emitting warning: " << qfi.lastModified().toString() << " > " << currentFileLastRead.toString();
+    reply = QMessageBox::question(this, "File changed on disk", "The file which is currently displayed in the editor has changed on disk, since it was last read. Do you want to save the contents of the editor, thus overwriting the changes on disk?", QMessageBox::Yes|QMessageBox::No);
+  }
+  if( QMessageBox::Yes == reply){
+    if (!currentFile->open(QIODevice::WriteOnly | QIODevice::Text)) {
+      delete currentFile;
+      return;
     }
-    QFileInfo qfi(*currentFile);
-    QMessageBox::StandardButton reply = QMessageBox::Yes;
-    if(qfi.lastModified() > currentFileLastRead){
-      qDebug() << "emitting warning: " << qfi.lastModified().toString() << " > " << currentFileLastRead.toString();
-      reply = QMessageBox::question(this, "File changed on disk", "The file which is currently displayed in the editor has changed on disk, since it was last read. Do you want to save the contents of the editor, thus overwriting the changes on disk?", QMessageBox::Yes|QMessageBox::No);
-    }
-    if( QMessageBox::Yes == reply){
-      if (!currentFile->open(QIODevice::WriteOnly | QIODevice::Text)) {
-          delete currentFile;
-          return;
-      }
-      QTextStream out(currentFile);
-      out << ui->plainTextEdit->toPlainText();
-      currentFile->close();
-    }
-    ui->plainTextEdit->document()->setModified( false );
-    updateListView();
-    statusBar()->showMessage( tr( "%1 has been saved" ).arg( currentFile->fileName() ) );
+    QTextStream out(currentFile);
+    out << ui->plainTextEdit->toPlainText();
+    currentFile->close();
+  }
+  ui->plainTextEdit->document()->setModified( false );
+  updateListView();
+  statusBar()->showMessage( tr( "%1 has been saved" ).arg( currentFile->fileName() ) );
 }
 
 static QFile* getHTMLFilename(QFile *file){
-    QFileInfo qfi(*file);
-    QString htmlFilename = qfi.path() + "/";
-    if(qfi.suffix() == "md" || qfi.suffix() == "mkd"){
-        htmlFilename +=  qfi.baseName() + ".html";
-    }
-    else {
-        htmlFilename +=  qfi.fileName() + ".html";
-    }
-    return new QFile(htmlFilename);
+  QFileInfo qfi(*file);
+  QString htmlFilename = qfi.path() + "/";
+  if(qfi.suffix() == "md" || qfi.suffix() == "mkd"){
+    htmlFilename +=  qfi.baseName() + ".html";
+  }
+  else {
+    htmlFilename +=  qfi.fileName() + ".html";
+  }
+  return new QFile(htmlFilename);
 }
 
 void MainWindow::fileSaveHTML(){
-    if(NULL == currentFile){
-        QString newFileName = QFileDialog::getSaveFileName();
-        currentFile = new QFile(newFileName);
-        setWindowFilePath(newFileName);
-     }
-    QFile *htmlFile = getHTMLFilename(currentFile);
-    if (!htmlFile->open(QIODevice::WriteOnly | QIODevice::Text)) {
-        delete currentFile;
-        return;
-    }
+  if(NULL == currentFile){
+    QString newFileName = QFileDialog::getSaveFileName();
+    currentFile = new QFile(newFileName);
+    setWindowFilePath(newFileName);
+  }
+  QFile *htmlFile = getHTMLFilename(currentFile);
+  if (!htmlFile->open(QIODevice::WriteOnly | QIODevice::Text)) {
+    delete currentFile;
+    return;
+  }
 
-    // TODO: this is not optimal, as the css is referenced via qrc and thus no longer applies in the resulting html document.
-    // the API of WebEnginePage is asynchronous, so we have to provide a lamda expression
-    ui->hswv->page()->toHtml([htmlFile](const QString &result){
-      QTextStream out(htmlFile);
-      out << result;
-      htmlFile->close();
-    });
+  // TODO: this is not optimal, as the css is referenced via qrc and thus no longer applies in the resulting html document.
+  // the API of WebEnginePage is asynchronous, so we have to provide a lamda expression
+  ui->hswv->page()->toHtml([htmlFile](const QString &result){
+    QTextStream out(htmlFile);
+    out << result;
+    htmlFile->close();
+  });
 
 }
 
 void MainWindow::fileSaveAs(){
-    QString fileName = QFileDialog::getSaveFileName(this,tr("Save File As"));
-    if(NULL != fileName ){
-        delete currentFile;
-        currentFile = new QFile(fileName);
-        setWindowFilePath(fileName);
-        fileSave();
-    }
+  QString fileName = QFileDialog::getSaveFileName(this,tr("Save File As"));
+  if(NULL != fileName ){
+    delete currentFile;
+    currentFile = new QFile(fileName);
+    setWindowFilePath(fileName);
+    fileSave();
+  }
 }
 
 void MainWindow::on_actionSettings_triggered(){
@@ -313,30 +313,30 @@ void MainWindow::on_actionSettings_triggered(){
 
 static QString markdown(QString in){
 
-    if(in.size() > 0){
-        QByteArray qba = in.toUtf8();
-        const char *txt = qba.constData();
-        if(NULL == txt) qDebug() << "txt was null!";
-        if(0 < qba.size()){
-            hoedown_renderer *renderer = hoedown_html_renderer_new((hoedown_html_flags)NULL,16);
-            // TODO: investigate further extensions
-            unsigned int extensions = HOEDOWN_EXT_FOOTNOTES | HOEDOWN_EXT_SPECIAL_ATTRIBUTE;
-            hoedown_document *document = hoedown_document_new(renderer, (hoedown_extensions)extensions, 16, 0, NULL, NULL);
-            hoedown_buffer *in_buf = hoedown_buffer_new(qba.size());
-            hoedown_buffer_puts(in_buf, txt);
-            hoedown_buffer *html = hoedown_buffer_new(64);
-            hoedown_document_render(document, html, in_buf->data,in_buf->size);
-            QString result(QString::fromUtf8(hoedown_buffer_cstr(html)));
-            hoedown_buffer_free(html);
-            hoedown_buffer_free(in_buf);
-            hoedown_document_free(document);
-            hoedown_html_renderer_free(renderer);
-            return result;
-        }
-        else
-            qDebug() <<"qstrlen was null";
+  if(in.size() > 0){
+    QByteArray qba = in.toUtf8();
+    const char *txt = qba.constData();
+    if(NULL == txt) qDebug() << "txt was null!";
+    if(0 < qba.size()){
+      hoedown_renderer *renderer = hoedown_html_renderer_new((hoedown_html_flags)NULL,16);
+      // TODO: investigate further extensions
+      unsigned int extensions = HOEDOWN_EXT_FOOTNOTES | HOEDOWN_EXT_SPECIAL_ATTRIBUTE;
+      hoedown_document *document = hoedown_document_new(renderer, (hoedown_extensions)extensions, 16, 0, NULL, NULL);
+      hoedown_buffer *in_buf = hoedown_buffer_new(qba.size());
+      hoedown_buffer_puts(in_buf, txt);
+      hoedown_buffer *html = hoedown_buffer_new(64);
+      hoedown_document_render(document, html, in_buf->data,in_buf->size);
+      QString result(QString::fromUtf8(hoedown_buffer_cstr(html)));
+      hoedown_buffer_free(html);
+      hoedown_buffer_free(in_buf);
+      hoedown_document_free(document);
+      hoedown_html_renderer_free(renderer);
+      return result;
     }
-    return "";
+    else
+      qDebug() <<"qstrlen was null";
+  }
+  return "";
 }
 
 QString MainWindow::wrapInHTML(QString in){
@@ -367,129 +367,129 @@ QString MainWindow::wrapInHTML(QString in){
 }
 
 void MainWindow::textChanged(){
-    QTime t;
-    t.start();
-    QString newText = markdown(ui->plainTextEdit->toPlainText());
-    QString newHTML = wrapInHTML(newText);
-    renderLabel->setText(QString("Render time: %1 ms").arg(t.elapsed()));
+  QTime t;
+  t.start();
+  QString newText = markdown(ui->plainTextEdit->toPlainText());
+  QString newHTML = wrapInHTML(newText);
+  renderLabel->setText(QString("Render time: %1 ms").arg(t.elapsed()));
 
-    // store scrollposition of webengine view before updating contents
-    QPointF pos = ui->hswv->page()->scrollPosition();
-    qDebug() << "scroll pos: " << pos;
+  // store scrollposition of webengine view before updating contents
+  QPointF pos = ui->hswv->page()->scrollPosition();
+  qDebug() << "scroll pos: " << pos;
 
-    ui->hswv->page()->setHtml(newHTML);
-    ui->sourceView->setPlainText(newText);
+  ui->hswv->page()->setHtml(newHTML);
+  ui->sourceView->setPlainText(newText);
 
-    // restore focus to pte, as of some new version of Qt it seems to be lost during updating the other views
-    ui->plainTextEdit->setFocus();
+  // restore focus to pte, as of some new version of Qt it seems to be lost during updating the other views
+  ui->plainTextEdit->setFocus();
 
-    // Scroll to the bottom
-    QString jsScrollScript("if( typeof(document.body) != 'undefined') { window.scrollTo(0,document.body.scrollHeight); };");
-    // restore scrollposition via javascript
-//    QString jsScrollScript("window.scrollTo(%1, %2)");
-    ui->hswv->page()->runJavaScript(jsScrollScript);//.arg(pos.x()).arg(pos.y()));
-    ui->hswv->page()->settings()->setAttribute(QWebEngineSettings::LocalContentCanAccessFileUrls,true);
+  // Scroll to the bottom
+  QString jsScrollScript("if( typeof(document.body) != 'undefined') { window.scrollTo(0,document.body.scrollHeight); };");
+  // restore scrollposition via javascript
+  //    QString jsScrollScript("window.scrollTo(%1, %2)");
+  ui->hswv->page()->runJavaScript(jsScrollScript);//.arg(pos.x()).arg(pos.y()));
+  ui->hswv->page()->settings()->setAttribute(QWebEngineSettings::LocalContentCanAccessFileUrls,true);
 }
 
 void MainWindow::on_actionBold_triggered()
 {
-    const QString text = selectedText();
+  const QString text = selectedText();
 
-    if ( text.isEmpty() ) {
-        return;
-    }
+  if ( text.isEmpty() ) {
+    return;
+  }
 
-    replaceSelectedTextBy( QString( "**%1**" ).arg( text ) );
+  replaceSelectedTextBy( QString( "**%1**" ).arg( text ) );
 }
 
 void MainWindow::on_actionItalic_triggered()
 {
-    const QString text = selectedText();
+  const QString text = selectedText();
 
-    if ( text.isEmpty() ) {
-        return;
-    }
+  if ( text.isEmpty() ) {
+    return;
+  }
 
-    replaceSelectedTextBy( QString( "_%1_" ).arg( text ) );
+  replaceSelectedTextBy( QString( "_%1_" ).arg( text ) );
 }
 
 void MainWindow::on_actionBullet_triggered()
 {
-    const QString text = selectedText();
-    replaceSelectedTextBy( QString( "* %1" ).arg( text ) );
+  const QString text = selectedText();
+  replaceSelectedTextBy( QString( "* %1" ).arg( text ) );
 }
 
 void MainWindow::on_actionNumbered_Bullet_triggered()
 {
-    const QString text = selectedText();
-    replaceSelectedTextBy( QString( "1. %1" ).arg( text ) );
+  const QString text = selectedText();
+  replaceSelectedTextBy( QString( "1. %1" ).arg( text ) );
 }
 
 void MainWindow::on_actionCode_triggered()
 {
-    const QString language = QInputDialog::getText( this, QString::null, tr( "Enter the language name:" ) );
+  const QString language = QInputDialog::getText( this, QString::null, tr( "Enter the language name:" ) );
 
-    if ( language.isEmpty() ) {
-        return;
-    }
+  if ( language.isEmpty() ) {
+    return;
+  }
 
-    insertTextAtCursorPosition( QString( ":::%1" ).arg( language ) );
+  insertTextAtCursorPosition( QString( ":::%1" ).arg( language ) );
 }
 
 void MainWindow::on_actionLink_triggered()
 {
-    const QString text = QInputDialog::getText( this, QString::null, tr( "Enter the link text:" ) );
+  const QString text = QInputDialog::getText( this, QString::null, tr( "Enter the link text:" ) );
 
-    if ( text.isEmpty() ) {
-        return;
-    }
+  if ( text.isEmpty() ) {
+    return;
+  }
 
-    const QString url = QInputDialog::getText( this, QString::null, tr( "Enter the link url:" ) );
+  const QString url = QInputDialog::getText( this, QString::null, tr( "Enter the link url:" ) );
 
-    if ( url.isEmpty() ) {
-        return;
-    }
+  if ( url.isEmpty() ) {
+    return;
+  }
 
-    insertTextAtCursorPosition( QString( "[%1](%2)" ).arg( text ).arg( url ) );
+  insertTextAtCursorPosition( QString( "[%1](%2)" ).arg( text ).arg( url ) );
 }
 
 void MainWindow::on_actionImage_triggered()
 {
-    const QString text = QInputDialog::getText( this, QString::null, tr( "Enter the image alt text:" ) );
+  const QString text = QInputDialog::getText( this, QString::null, tr( "Enter the image alt text:" ) );
 
-    if ( text.isEmpty() ) {
-        return;
-    }
+  if ( text.isEmpty() ) {
+    return;
+  }
 
-    const QString url = QInputDialog::getText( this, QString::null, tr( "Enter the image url:" ) );
+  const QString url = QInputDialog::getText( this, QString::null, tr( "Enter the image url:" ) );
 
-    if ( url.isEmpty() ) {
-        return;
-    }
+  if ( url.isEmpty() ) {
+    return;
+  }
 
-    insertTextAtCursorPosition( QString( "[%1](%2)" ).arg( text ).arg( url ) );
+  insertTextAtCursorPosition( QString( "[%1](%2)" ).arg( text ).arg( url ) );
 }
 
 void MainWindow::headerComboBox_activated( int index )
 {
-    QString text = selectedText();
+  QString text = selectedText();
 
-    if ( text.isEmpty() ) {
-        return;
+  if ( text.isEmpty() ) {
+    return;
+  }
+
+  const int count = index +1;
+  const QString header = QString( count, '#' );
+
+  if ( text.startsWith( "#" ) ) {
+    while ( text.startsWith( "#" ) ) {
+      text.remove( 0, 1 );
     }
 
-    const int count = index +1;
-    const QString header = QString( count, '#' );
+    text.remove( 0, 1 );
+  }
 
-    if ( text.startsWith( "#" ) ) {
-        while ( text.startsWith( "#" ) ) {
-            text.remove( 0, 1 );
-        }
-
-        text.remove( 0, 1 );
-    }
-
-    replaceSelectedTextBy( QString( "%1 %2" ).arg( header ).arg( text ) );
+  replaceSelectedTextBy( QString( "%1 %2" ).arg( header ).arg( text ) );
 }
 
 void MainWindow::readUserSettings(){
@@ -562,5 +562,5 @@ void MainWindow::imageDropped(QString path){
     return;
   }
 
-   ui->plainTextEdit->insertPlainText(QString("![](file://%1)").arg(targetPath));
+  ui->plainTextEdit->insertPlainText(QString("![](file://%1)").arg(targetPath));
 }
