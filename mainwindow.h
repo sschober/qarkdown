@@ -52,6 +52,7 @@ private slots:
     void on_actionSettings_triggered();
     //TODO: void on_actionProjectSettings_triggerd(); - should be analogous to on_actionSettings_triggered()
     void imageDropped(QString path);
+    void navigationRequest(QString navigationRequestTarget);
 
 private:
     void updateListView();

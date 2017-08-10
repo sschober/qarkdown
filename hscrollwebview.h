@@ -6,16 +6,19 @@
 class HScrollWebView : public QWebEngineView
 {
     Q_OBJECT
-public:
+
+  public:
     explicit HScrollWebView(QWidget *parent = 0);
     
-protected:
+  protected:
     virtual void wheelEvent(QWheelEvent *ev);
 
-signals:
-    
-public slots:
+  signals:
+    void navigationRequest(QString linkTarget);
+
+  public slots:
     void scrollToCursor();
+    Q_INVOKABLE void linkClicked(QString linkTarget);
     
 };
 

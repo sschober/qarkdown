@@ -86,6 +86,9 @@ MainWindow::MainWindow(QWidget *parent) :
   connect( headerComboBox, SIGNAL( activated( int ) ), this, SLOT( headerComboBox_activated( int ) ) );
 
   connect( ui->plainTextEdit, SIGNAL(imageDropped(QString)), this, SLOT(imageDropped(QString)));
+
+  connect(ui->hswv, SIGNAL(navigationRequest(QString)), this, SLOT(navigationRequest(QString)));
+
   ui->sourceView->hide();
 
   ui->listView->hide();
@@ -123,6 +126,11 @@ void MainWindow::dirViewClicked(QModelIndex idx){
 
   openFile(model->filePath(idx));
 
+}
+
+void MainWindow::navigationRequest(QString navigationRequestTarget){
+  QString path(QFileInfo(currentFile->fileName()).dir().path());
+  openFile(path + "/" + navigationRequestTarget);
 }
 
 void MainWindow::about()
@@ -360,7 +368,8 @@ QString MainWindow::wrapInHTML(QString in){
     stylesheet = QString("<link type=\"text/css\" rel=\"stylesheet\" href=\"%1\"/>").arg(stylesheetPath);
   }
 
-  QString header = QString("%1\n\t\t\t%2").arg(charset).arg(stylesheet);
+  QString scriptWebChannel("<script type=\"text/javascript\" src=\"qrc:///qtwebchannel/qwebchannel.js\"></script>");
+  QString header = QString("%1\n\t\t\t%2\n\t\t\t%3").arg(charset).arg(stylesheet).arg(scriptWebChannel);
 
   QString body = in;
 
