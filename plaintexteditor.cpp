@@ -6,6 +6,7 @@
 
 #include <QTextCursor>
 #include <QTextBlock>
+#include <QMimeData>
 
 #define IndentSize 4
 #define TabSize 4
@@ -13,7 +14,7 @@
 PlainTextEditor::PlainTextEditor( QWidget* parent )
   : QPlainTextEdit( parent )
 {
-  setTabStopWidth( 40 );
+  //setTabStopWidth( 40 );
   setTabChangesFocus( false );
   setAcceptDrops(true);
 }
@@ -176,7 +177,7 @@ int PlainTextEditor::indentedColumn( int column, bool doIndent ) const
 }
 
 void PlainTextEditor::dragEnterEvent(QDragEnterEvent *event){
-  qDebug() << "drop enter event with mime data: " << event->mimeData()->text();
+  //qDebug() << "drop enter event with mime data: " << event->mimeData()->text();
   event->acceptProposedAction();
 }
 

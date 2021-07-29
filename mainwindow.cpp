@@ -104,7 +104,7 @@ MainWindow::MainWindow(QWidget *parent) :
     fileNew();
   }
 
-  QWebEngineSettings::defaultSettings()->setAttribute(QWebEngineSettings::LocalContentCanAccessFileUrls, true);
+  //QWebEngineSettings::defaultSettings()->setAttribute(QWebEngineSettings::LocalContentCanAccessFileUrls, true);
 }
 
 void MainWindow::fileNew(){
@@ -135,7 +135,7 @@ void MainWindow::navigationRequest(QString navigationRequestTarget){
 
 void MainWindow::about()
 {
-  QMessageBox::information( this, QString::null, tr( "%1 v%2" ).arg( qApp->applicationName() ).arg( qApp->applicationVersion() ) );
+  QMessageBox::information( this, NULL, tr( "%1 v%2" ).arg( qApp->applicationName() ).arg( qApp->applicationVersion() ) );
 }
 
 void MainWindow::aboutQt()
@@ -181,7 +181,7 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::openFile(QString fileName){
-  if(NULL != fileName){
+  if(!fileName.isNull()){
     delete currentFile;
     currentFile = new QFile(fileName);
     if (!currentFile->open(QIODevice::ReadWrite | QIODevice::Text)) {
@@ -305,7 +305,7 @@ void MainWindow::fileSaveHTML(){
 
 void MainWindow::fileSaveAs(){
   QString fileName = QFileDialog::getSaveFileName(this,tr("Save File As"));
-  if(NULL != fileName ){
+  if(fileName.isNull()){
     delete currentFile;
     currentFile = new QFile(fileName);
     setWindowFilePath(fileName);
@@ -381,13 +381,13 @@ QString MainWindow::wrapInHTML(QString in){
 }
 
 void MainWindow::textChanged(){
-  QTime t;
-  t.start();
+  //QTime t;
+  //t.start();
   QString editorText(ui->plainTextEdit->toPlainText());
   editorText.insert(ui->plainTextEdit->textCursor().position(), QString::fromUtf8("<span id=\"qdCursor\">\u2663</span>"));
   QString newText = markdown(editorText);
   QString newHTML = wrapInHTML(newText);
-  renderLabel->setText(QString("Render time: %1 ms").arg(t.elapsed()));
+  //renderLabel->setText(QString("Render time: %1 ms").arg(t.elapsed()));
 
   ui->hswv->page()->setHtml(newHTML);
   ui->sourceView->setPlainText(newText);
@@ -434,7 +434,7 @@ void MainWindow::on_actionNumbered_Bullet_triggered()
 
 void MainWindow::on_actionCode_triggered()
 {
-  const QString language = QInputDialog::getText( this, QString::null, tr( "Enter the language name:" ) );
+  const QString language = QInputDialog::getText( this, NULL, tr( "Enter the language name:" ) );
 
   if ( language.isEmpty() ) {
     return;
@@ -445,13 +445,13 @@ void MainWindow::on_actionCode_triggered()
 
 void MainWindow::on_actionLink_triggered()
 {
-  const QString text = QInputDialog::getText( this, QString::null, tr( "Enter the link text:" ) );
+  const QString text = QInputDialog::getText( this, NULL, tr( "Enter the link text:" ) );
 
   if ( text.isEmpty() ) {
     return;
   }
 
-  const QString url = QInputDialog::getText( this, QString::null, tr( "Enter the link url:" ) );
+  const QString url = QInputDialog::getText( this, NULL, tr( "Enter the link url:" ) );
 
   if ( url.isEmpty() ) {
     return;
@@ -462,13 +462,13 @@ void MainWindow::on_actionLink_triggered()
 
 void MainWindow::on_actionImage_triggered()
 {
-  const QString text = QInputDialog::getText( this, QString::null, tr( "Enter the image alt text:" ) );
+  const QString text = QInputDialog::getText( this, NULL, tr( "Enter the image alt text:" ) );
 
   if ( text.isEmpty() ) {
     return;
   }
 
-  const QString url = QInputDialog::getText( this, QString::null, tr( "Enter the image url:" ) );
+  const QString url = QInputDialog::getText( this, NULL, tr( "Enter the image url:" ) );
 
   if ( url.isEmpty() ) {
     return;

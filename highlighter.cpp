@@ -112,7 +112,7 @@ void HGMarkdownHighlighter::clearFormatting()
 {
     QTextBlock block = document->firstBlock();
     while (block.isValid()) {
-        block.layout()->clearAdditionalFormats();
+        block.layout()->clearFormats();
         block = block.next();
     }
 }
@@ -153,7 +153,7 @@ void HGMarkdownHighlighter::highlight()
                 QTextBlock block = document->findBlockByNumber(j);
 
                 QTextLayout *layout = block.layout();
-                QList<QTextLayout::FormatRange> list = layout->additionalFormats();
+                QList<QTextLayout::FormatRange> list = layout->formats();
                 int blockpos = block.position();
                 QTextLayout::FormatRange r;
                 r.format = style.format;
@@ -172,7 +172,7 @@ void HGMarkdownHighlighter::highlight()
                 }
 
                 list.append(r);
-                layout->setAdditionalFormats(list);
+                layout->setFormats(list);
             }
 
             elem_cursor = elem_cursor->next;

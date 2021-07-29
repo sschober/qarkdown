@@ -13,7 +13,7 @@ HScrollWebView::HScrollWebView(QWidget *parent) :
 }
 
 void HScrollWebView::wheelEvent(QWheelEvent *ev){
-  this->page()->runJavaScript(QString("window.scrollBy(%1, 0);").arg( ev->delta()));
+  this->page()->runJavaScript(QString("window.scrollBy(%1, 0);").arg( ev->pixelDelta().x()));
 }
 
 void HScrollWebView::scrollToCursor(){
